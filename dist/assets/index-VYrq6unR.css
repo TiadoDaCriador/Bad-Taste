@@ -1,1 +1,0 @@
-*,*:before,*:after{box-sizing:border-box;margin:0;padding:0}:root{--bg: #eeece8;--text: #111111}body{background:var(--bg);color:var(--text);font-family:Space Grotesk,Helvetica Neue,Helvetica,Arial,sans-serif;height:100vh;width:100vw;cursor:crosshair}#root{height:100vh;width:100vw}a{color:inherit;text-decoration:none}
