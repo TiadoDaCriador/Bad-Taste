@@ -1,17 +1,57 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import RotatingWheel from '../components/RotatingWheel'
 import BackgroundSlideshow from '../components/BackgroundSlideshow'
 import VideoPreview from '../components/VideoPreview'
-import { projects } from '../data/projects'
+import { getProjects } from '../admin/adminData'
+const projects = getProjects()
+import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
 
-const NAV_LINKS = [
-  { label: 'VIDEO', to: '#' },
-  { label: 'PHOTOS', to: '#' },
-  { label: 'CONTACTS', to: '/contactos' },
-]
+function LanguageSwitcher() {
+  const { lang, changeLanguage } = useLanguage()
+
+  return (
+    <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+      {LANGUAGES.map((l, i) => (
+        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <button
+            onClick={() => changeLanguage(l)}
+            style={{
+              fontSize: '10px',
+              fontWeight: '600',
+              letterSpacing: '0.15em',
+              color: '#111',
+              background: 'none',
+              border: 'none',
+              cursor: 'crosshair',
+              padding: 0,
+              opacity: lang === l ? 1 : 0.35,
+              transition: 'opacity 0.2s',
+              fontFamily: 'inherit',
+            }}
+            onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
+            onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
+          >
+            {l.toUpperCase()}
+          </button>
+          {i < LANGUAGES.length - 1 && (
+            <span style={{ fontSize: '10px', color: '#111', opacity: 0.2 }}>|</span>
+          )}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 function Navbar() {
+  const { t } = useLanguage()
+
+  const navLinks = [
+    { label: t.nav.video, to: '/video' },
+    { label: t.nav.photos, to: '#' },
+    { label: t.nav.contacts, to: '/contactos' },
+  ]
+
   return (
     <nav style={{
       position: 'fixed',
@@ -45,13 +85,14 @@ function Navbar() {
         }}>BAD TASTE</span>
       </div>
 
-      {/* Nav links */}
+      {/* Right side: nav links + language switcher */}
       <div style={{
         display: 'flex',
+        alignItems: 'center',
         gap: '2.5rem',
         pointerEvents: 'auto',
       }}>
-        {NAV_LINKS.map(({ label, to }) => (
+        {navLinks.map(({ label, to }) => (
           <Link
             key={label}
             to={to}
@@ -71,12 +112,23 @@ function Navbar() {
             {label}
           </Link>
         ))}
+
+        <div style={{
+          width: '1px',
+          height: '12px',
+          background: '#111',
+          opacity: 0.2,
+        }} />
+
+        <LanguageSwitcher />
       </div>
     </nav>
   )
 }
 
 function ContactsSection() {
+  const { t } = useLanguage()
+
   return (
     <section
       id="contacts"
@@ -102,16 +154,16 @@ function ContactsSection() {
           <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '0.12em' }}>BAD TASTE</span>
         </div>
         <p style={{ fontSize: '11px', lineHeight: 1.8, opacity: 0.55, maxWidth: '220px', letterSpacing: '0.04em' }}>
-          Portfólio de projetos visuais e sonoros.<br />Lisboa, Portugal.
+          {t.footer.description}<br />{t.footer.location}
         </p>
       </div>
 
       {/* Middle: links */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <p style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
-          NAVEGAÇÃO
+          {t.footer.navigation}
         </p>
-        {['VIDEO', 'PHOTOS', 'PROJETOS'].map(item => (
+        {t.nav.navItems.map(item => (
           <a
             key={item}
             href="#"
@@ -133,7 +185,7 @@ function ContactsSection() {
       {/* Right: contacts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <p style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
-          CONTACTO
+          {t.footer.contact}
         </p>
         {[
           { label: 'hello@badtaste.pt', href: 'mailto:hello@badtaste.pt' },
@@ -161,7 +213,7 @@ function ContactsSection() {
           </a>
         ))}
         <p style={{ fontSize: '11px', letterSpacing: '0.08em', opacity: 0.4, marginTop: '1rem' }}>
-          © 2026 Bad Taste
+          {t.footer.copyright}
         </p>
       </div>
     </section>
@@ -172,7 +224,6 @@ export default function HomePage() {
   const [hoveredProject, setHoveredProject] = useState(null)
 
   const projectIndex = projects.findIndex(p => p.slug === hoveredProject?.slug)
-
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

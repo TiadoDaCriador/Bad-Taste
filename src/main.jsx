@@ -9,16 +9,27 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import ProjectPage from './pages/ProjectPage'
 import ContactsPage from './pages/ContactsPage'
+import VideoPage from './pages/VideoPage'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminProjectEditor from './pages/admin/AdminProjectEditor'
+import { LanguageProvider } from './i18n/LanguageContext'
 import './styles/global.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/projeto/:slug" element={<ProjectPage />} />
-        <Route path="/contactos" element={<ContactsPage />} />
-      </Routes>
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/projeto/:slug" element={<ProjectPage />} />
+          <Route path="/contactos" element={<ContactsPage />} />
+          <Route path="/video" element={<VideoPage />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/projects/:slug" element={<AdminProjectEditor />} />
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   </React.StrictMode>
 )

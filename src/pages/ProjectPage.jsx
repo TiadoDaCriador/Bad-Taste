@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { projects } from '../data/projects'
+import { getProjects } from '../admin/adminData'
+const projects = getProjects()
+import { useLanguage } from '../i18n/LanguageContext'
 
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const project = projects.find(p => p.slug === slug)
   const [visible, setVisible] = useState(false)
+  const { t } = useLanguage()
+
+  const localized = t.projects[slug] || {}
+  const title = localized.title || project?.title || ''
+  const description = localized.description || project?.description || ''
+  const tags = localized.tags || project?.tags || []
 
   useEffect(() => {
-    // Fade in on mount
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
@@ -29,12 +36,12 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-        <p style={{ letterSpacing: '0.1em', color: '#888', fontSize: '12px' }}>PROJECTO NÃO ENCONTRADO</p>
+        <p style={{ letterSpacing: '0.1em', color: '#888', fontSize: '12px' }}>{t.project.notFound}</p>
         <button
           onClick={() => navigate('/')}
           style={{ background: 'none', border: 'none', cursor: 'crosshair', fontSize: '12px', letterSpacing: '0.1em', color: '#888', borderBottom: '1px solid #888', paddingBottom: '2px' }}
         >
-          ← VOLTAR
+          {t.project.back}
         </button>
       </div>
     )
@@ -65,7 +72,7 @@ export default function ProjectPage() {
           padding: 0,
         }}
       >
-        ← VOLTAR
+        {t.project.back}
       </button>
 
       {/* Video full-width */}
@@ -95,7 +102,7 @@ export default function ProjectPage() {
           letterSpacing: '0.1em',
           color: '#999',
         }}>
-          VÍDEO EM BREVE
+          {t.project.videoSoon}
         </div>
       )}
 
@@ -108,7 +115,7 @@ export default function ProjectPage() {
           lineHeight: 1,
           marginBottom: '2rem',
         }}>
-          {project.title.toUpperCase()}
+          {title.toUpperCase()}
         </h1>
 
         <p style={{
@@ -119,11 +126,11 @@ export default function ProjectPage() {
           maxWidth: '600px',
           fontWeight: '300',
         }}>
-          {project.description}
+          {description}
         </p>
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {project.tags.map(tag => (
+          {tags.map(tag => (
             <span
               key={tag}
               style={{

@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const CENTER = 350
 const SVG_SIZE = CENTER * 2
@@ -31,6 +32,7 @@ function annularSegmentPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 
 
 export default function RotatingWheel({ projects, onHoverChange, externalActivate }) {
+  const { t } = useLanguage()
   const rotationRef = useRef(0)
   const speedRef = useRef(NORMAL_SPEED)
   const targetSpeedRef = useRef(NORMAL_SPEED)
@@ -167,7 +169,7 @@ export default function RotatingWheel({ projects, onHoverChange, externalActivat
           transform: mounted ? 'scale(1)' : 'scale(0)',
           transition: 'transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
-        aria-label="Anel de projetos do portfólio"
+        aria-label={t.wheel.ariaLabel}
         role="group"
       >
         {/* Defs at SVG root so url(#...) references always resolve */}

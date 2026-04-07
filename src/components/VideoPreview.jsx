@@ -1,4 +1,12 @@
+import { useLanguage } from '../i18n/LanguageContext'
+
 export default function VideoPreview({ project, projectIndex, totalProjects }) {
+  const { t } = useLanguage()
+  const localized = t.projects[project.slug] || {}
+  const title = localized.title || project.title
+  const description = localized.description || project.description
+  const tags = localized.tags || project.tags
+
   const counter = totalProjects > 1
     ? `${String(projectIndex + 1).padStart(2, '0')} / ${String(totalProjects).padStart(2, '0')}`
     : null
@@ -24,7 +32,7 @@ export default function VideoPreview({ project, projectIndex, totalProjects }) {
       <div style={{ padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
           <p style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '0.1em' }}>
-            {project.title.toUpperCase()}
+            {title.toUpperCase()}
           </p>
           {counter && (
             <span style={{ fontSize: '10px', color: '#888', letterSpacing: '0.08em', fontWeight: '400' }}>
@@ -33,10 +41,10 @@ export default function VideoPreview({ project, projectIndex, totalProjects }) {
           )}
         </div>
         <p style={{ fontSize: '11px', color: '#555', lineHeight: 1.6 }}>
-          {project.description}
+          {description}
         </p>
         <div style={{ marginTop: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-          {project.tags.map(tag => (
+          {tags.map(tag => (
             <span
               key={tag}
               style={{

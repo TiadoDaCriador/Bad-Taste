@@ -35,19 +35,34 @@ Website de portfólio pessoal com uma experiência visual minimalista e dinâmic
 - Anel/segmentos: **SVG** com paths annulares calculados geometricamente
 - Routing: **react-router-dom** v6
 - Styling: **CSS inline** (sem framework)
+- i18n: **contexto React custom** (sem dependências externas) — ES / CA / EN
+- Admin: **localStorage** para persistência de dados (sem backend); auth por password via `.env`
 
 ## Estrutura de Ficheiros
 ```
 src/
-  data/projects.js          — array de projectos (fonte de verdade)
+  admin/
+    adminData.js            — camada de dados: getProjects/saveProjects, getContacts/saveContacts
+                              lê de localStorage; fallback para data/projects.js se vazio
+                              também exporta slugify()
+    adminAuth.js            — login/logout/isAuthenticated; password via VITE_ADMIN_PASSWORD
+  data/projects.js          — array de projetos estático (fonte de verdade inicial; sem traduções)
+  i18n/
+    translations.js         — todas as traduções: UI + títulos/descrições/tags por slug (ES/CA/EN)
+    LanguageContext.jsx     — LanguageProvider + hook useLanguage(); língua guardada em localStorage
   components/
     RotatingWheel.jsx       — anel SVG rotativo + lógica de hover/velocidade
     VideoPreview.jsx        — caixa de info do projecto (título, descrição, tags); sem vídeo
     BackgroundSlideshow.jsx — slideshow de fundo com crossfade; no hover mostra vídeo full-screen
   pages/
-    HomePage.jsx            — homepage: navbar + anel + slideshow + footer de contactos
+    HomePage.jsx            — homepage: navbar (com seletor ES|CA|EN) + anel + slideshow + footer
     ProjectPage.jsx         — página de detalhe /projeto/:slug
     ContactsPage.jsx        — página de contactos (/contactos); fundo preto, fade-in/out, Esc volta
+    VideoPage.jsx           — página /video: grid 2 colunas com todos os projetos; thumbnail → vídeo ao hover; clique navega para /projeto/:slug
+    admin/
+      AdminLogin.jsx        — login do painel (/admin); password via VITE_ADMIN_PASSWORD
+      AdminDashboard.jsx    — painel principal (/admin/dashboard): lista projetos + reordenação + contactos
+      AdminProjectEditor.jsx — editor de projeto (/admin/projects/:slug); "novo" para criar
   styles/
     global.css              — reset + variáveis de cor
 public/
@@ -55,6 +70,8 @@ public/
     full/                   — vídeos completos dos projetos
     preview/                — vídeos de preview separados (opcional, ver abaixo)
   images/                   — imagens usadas no slideshow de fundo (16 ficheiros PNG)
+.env                        — VITE_ADMIN_PASSWORD (ignorado pelo git)
+.env.example                — template público
 ```
 
 ## Constantes do Anel (RotatingWheel.jsx)
@@ -65,6 +82,23 @@ public/
 - `SLOW_SPEED = 0.015` — graus por frame no hover/tap
 - Interpolação de velocidade: `speed += (target - speed) * 0.035` por frame
 - Sem texto nos segmentos — títulos aparecem apenas no painel VideoPreview
+
+## Camada de Dados Admin (`src/admin/adminData.js`)
+- Todas as páginas públicas (HomePage, ProjectPage, VideoPage, ContactsPage) lêem de `getProjects()` / `getContacts()` — **não** importam diretamente `data/projects.js`
+- `getProjects()` — retorna array do localStorage (`bt_admin_projects`) ou fallback para `data/projects.js`
+- `saveProjects(arr)` — persiste em localStorage
+- `getContacts()` — retorna objeto `{email, instagram, instagramUrl, phone}` do localStorage (`bt_admin_contacts`) ou defaults
+- `saveContacts(obj)` — persiste em localStorage
+- `slugify(text)` — gera slug a partir de texto (remove acentos, substitui espaços por `-`)
+- Para ligar a backend: substituir implementação de `getProjects`/`saveProjects` por chamadas API — interface mantém-se
+
+## Painel de Admin
+- Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`)
+- Rota `/admin/dashboard` — lista de projetos com reordenação (▲▼), editar, apagar; edição de contactos
+- Rota `/admin/projects/novo` — criar novo projeto
+- Rota `/admin/projects/:slug` — editar projeto existente
+- Auth: sessionStorage (`bt_admin_auth`); perde-se ao fechar o tab
+- Design: fundo `#111`, tema escuro, mesma tipografia Space Grotesk
 
 ## Dados dos Projetos (`src/data/projects.js`)
 Cada projeto tem:
@@ -151,7 +185,20 @@ Cada projeto tem:
 - [x] Footer tem `position: relative; z-index: 1` para aparecer acima do BackgroundSlideshow fixo
 - [x] `history.scrollRestoration = 'manual'` em `main.jsx` — página começa sempre no topo ao refresh
 - [x] Rota `/contactos` registada em `main.jsx`
-- [ ] Dados reais de contacto substituídos nos placeholders (email, Instagram, telemóvel) em `ContactsPage.jsx` e `HomePage.jsx`
+- [x] Repositório GitHub criado e código publicado: https://github.com/TiadoDaCriador/Bad-Taste
+- [x] Sistema i18n: Espanhol (padrão), Catalão e Inglês — seletor ES|CA|EN na navbar
+- [x] Traduções completas: UI (navbar, footer, contactos, erros) + títulos/descrições/tags de todos os projetos
+- [x] Língua guardada em `localStorage` (persiste entre sessões)
+- [x] Página `/video` criada (`VideoPage.jsx`): grid 2 colunas, todos os projetos do anel, thumbnail → vídeo ao hover, contador `01/N`, tags, clique → `/projeto/:slug`; último projeto ocupa largura total se ímpar; Esc volta à homepage
+- [x] Navbar VIDEO atualizado de `#` para `/video`; rota `/video` registada em `main.jsx`
+- [x] Página `/contactos` redesenhada: layout 2 colunas (info + formulário), separadas por linha vertical fina; formulário com inputs `border-bottom` only, labels caps, botão rectangular sem bordas arredondadas; estado "enviado" inverte cores por 3s; traduções do formulário adicionadas a todas as línguas (`t.contacts.form`)
+- [x] Painel de admin criado (`/admin`, `/admin/dashboard`, `/admin/projects/:slug`)
+- [x] Auth por password via `VITE_ADMIN_PASSWORD` no `.env` (sessionStorage)
+- [x] Admin: criar, editar, apagar e reordenar projetos (todos os campos)
+- [x] Admin: editar contactos (email, Instagram handle, Instagram URL, telemóvel)
+- [x] Camada de dados `adminData.js`: páginas públicas lêem de localStorage (fallback para projects.js)
+- [x] `.env` criado e ignorado pelo git; `.env.example` como template
+- [ ] Formulário de contacto ligado a serviço de envio real (Formspree / Resend / etc.) — atualmente só UI
 - [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
 - [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)
 - [ ] Títulos/descrições/tags finais validados pelo cliente
