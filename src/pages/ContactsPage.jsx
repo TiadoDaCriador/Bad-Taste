@@ -9,11 +9,11 @@ const inputStyle = {
   border: 'none',
   borderBottom: '1px solid rgba(238, 236, 232, 0.2)',
   color: '#eeece8',
-  fontSize: '13px',
+  fontSize: 'clamp(12px, 1.5vw, 13px)',
   fontFamily: 'Space Grotesk, sans-serif',
   fontWeight: '300',
   letterSpacing: '0.04em',
-  padding: '0.75rem 0',
+  padding: 'clamp(0.5rem, 1vw, 0.75rem) 0',
   outline: 'none',
   cursor: 'text',
   transition: 'border-color 0.2s',
@@ -75,21 +75,44 @@ export default function ContactsPage() {
       fontFamily: 'Space Grotesk, sans-serif',
       overflowY: 'auto',
     }}>
+      <style>
+        {`
+          @media (max-width: 768px) {
+            [data-contacts-grid] {
+              grid-template-columns: 1fr !important;
+              gap: 2rem !important;
+              padding: 2rem 1.75rem !important;
+            }
+            [data-divider] {
+              display: none !important;
+            }
+            [data-col-left] {
+              padding-right: 0 !important;
+            }
+            [data-col-right] {
+              padding-left: 0 !important;
+            }
+          }
+        `}
+      </style>
+
       {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '1.5rem 1.75rem',
+        padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)',
         borderBottom: '1px solid rgba(238, 236, 232, 0.1)',
         flexShrink: 0,
+        gap: 'clamp(1rem, 2vw, 1.5rem)',
+        flexWrap: 'wrap',
       }}>
         <button
           onClick={handleBack}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: 'clamp(6px, 1.5vw, 10px)',
             background: 'none',
             border: 'none',
             color: '#eeece8',
@@ -97,18 +120,18 @@ export default function ContactsPage() {
             padding: 0,
           }}
         >
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="36" height="36" fill="#eeece8"/>
             <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#111">BT</text>
           </svg>
-          <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '0.12em' }}>BAD TASTE</span>
+          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em' }}>BAD TASTE</span>
         </button>
 
         <button
           onClick={handleBack}
           aria-label={t.contacts.backAriaLabel}
           style={{
-            fontSize: '10px',
+            fontSize: 'clamp(9px, 1.2vw, 10px)',
             fontWeight: '600',
             letterSpacing: '0.2em',
             color: '#eeece8',
@@ -126,24 +149,24 @@ export default function ContactsPage() {
       </div>
 
       {/* Content */}
-      <div style={{
+      <div data-contacts-grid style={{
         flex: 1,
         display: 'grid',
         gridTemplateColumns: '1fr 1px 1fr',
         gap: 0,
-        padding: '4rem 1.75rem',
+        padding: 'clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 1.75rem)',
         maxWidth: '1000px',
         width: '100%',
         margin: '0 auto',
       }}>
         {/* Left — contact info */}
-        <div style={{ paddingRight: '4rem' }}>
+        <div data-col-left style={{ paddingRight: 'clamp(2rem, 3vw, 4rem)' }}>
           <p style={{
-            fontSize: '9px',
+            fontSize: 'clamp(8px, 1.2vw, 9px)',
             fontWeight: '700',
             letterSpacing: '0.25em',
             opacity: 0.35,
-            marginBottom: '3rem',
+            marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
           }}>{t.contacts.heading}</p>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -156,8 +179,8 @@ export default function ContactsPage() {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.35rem',
-                  padding: '2rem 0',
+                  gap: 'clamp(0.2rem, 1vw, 0.35rem)',
+                  padding: 'clamp(1.5rem, 2vw, 2rem) 0',
                   borderBottom: '1px solid rgba(238, 236, 232, 0.1)',
                   cursor: 'crosshair',
                   textDecoration: 'none',
@@ -167,10 +190,10 @@ export default function ContactsPage() {
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >
-                <span style={{ fontSize: '9px', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
+                <span style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
                   {label}
                 </span>
-                <span style={{ fontSize: '1.6rem', fontWeight: '300', letterSpacing: '0.04em', lineHeight: 1.1 }}>
+                <span style={{ fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', fontWeight: '300', letterSpacing: '0.04em', lineHeight: 1.1 }}>
                   {value}
                 </span>
               </a>
@@ -179,22 +202,22 @@ export default function ContactsPage() {
         </div>
 
         {/* Divider */}
-        <div style={{ background: 'rgba(238, 236, 232, 0.1)', margin: '0' }} />
+        <div data-divider style={{ background: 'rgba(238, 236, 232, 0.1)', margin: '0' }} />
 
         {/* Right — form */}
-        <div style={{ paddingLeft: '4rem' }}>
+        <div data-col-right style={{ paddingLeft: 'clamp(2rem, 3vw, 4rem)' }}>
           <p style={{
-            fontSize: '9px',
+            fontSize: 'clamp(8px, 1.2vw, 9px)',
             fontWeight: '700',
             letterSpacing: '0.25em',
             opacity: 0.35,
-            marginBottom: '3rem',
+            marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
           }}>{f.or}</p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 2vw, 2.5rem)' }}>
             {/* Name */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <label style={{ fontSize: '9px', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
                 {f.name}
               </label>
               <input
@@ -212,8 +235,8 @@ export default function ContactsPage() {
             </div>
 
             {/* Email */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <label style={{ fontSize: '9px', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
                 {f.emailLabel}
               </label>
               <input
@@ -231,8 +254,8 @@ export default function ContactsPage() {
             </div>
 
             {/* Message */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <label style={{ fontSize: '9px', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
                 {f.message}
               </label>
               <textarea
@@ -259,14 +282,14 @@ export default function ContactsPage() {
                   background: sent ? '#eeece8' : 'none',
                   border: '1px solid rgba(238, 236, 232, 0.35)',
                   color: sent ? '#111' : '#eeece8',
-                  fontSize: '10px',
+                  fontSize: 'clamp(9px, 1.2vw, 10px)',
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontWeight: '700',
                   letterSpacing: '0.2em',
-                  padding: '0.85rem 2.5rem',
+                  padding: 'clamp(0.6rem, 1.5vw, 0.85rem) clamp(1.5rem, 3vw, 2.5rem)',
                   cursor: 'crosshair',
                   transition: 'background 0.3s, color 0.3s, border-color 0.2s',
-                  minWidth: '140px',
+                  minWidth: 'clamp(120px, 25vw, 140px)',
                 }}
                 onMouseEnter={e => {
                   if (!sent) {
@@ -290,10 +313,10 @@ export default function ContactsPage() {
 
       {/* Footer */}
       <div style={{
-        padding: '1.5rem 1.75rem',
+        padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)',
         borderTop: '1px solid rgba(238, 236, 232, 0.1)',
         opacity: 0.3,
-        fontSize: '10px',
+        fontSize: 'clamp(9px, 1.2vw, 10px)',
         letterSpacing: '0.1em',
         flexShrink: 0,
       }}>

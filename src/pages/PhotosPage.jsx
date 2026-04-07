@@ -67,7 +67,7 @@ const PhotosPage = () => {
   const pageStyle = {
     minHeight: '100vh',
     backgroundColor: '#eeece8',
-    padding: '120px 40px 60px',
+    padding: 'clamp(80px, 12vw, 120px) clamp(1rem, 3vw, 40px) clamp(2rem, 5vw, 60px)',
     fontFamily: "'Space Grotesk', sans-serif",
   };
 
@@ -77,24 +77,18 @@ const PhotosPage = () => {
   };
 
   const titleStyle = {
-    fontSize: '32px',
+    fontSize: 'clamp(24px, 5vw, 32px)',
     fontWeight: 300,
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
-    marginBottom: '60px',
+    marginBottom: 'clamp(2rem, 4vw, 60px)',
     color: '#000',
   };
 
   const gridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '24px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-    },
-    '@media (max-width: 480px)': {
-      gridTemplateColumns: '1fr',
-    },
+    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(180px, 40vw, 280px), 1fr))',
+    gap: 'clamp(1rem, 3vw, 24px)',
   };
 
   const cardStyle = {
@@ -125,8 +119,8 @@ const PhotosPage = () => {
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     color: '#fff',
-    padding: '12px 16px',
-    fontSize: '12px',
+    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
+    fontSize: 'clamp(10px, 1.2vw, 12px)',
     fontWeight: 400,
     letterSpacing: '0.02em',
     textTransform: 'uppercase',
@@ -145,36 +139,36 @@ const PhotosPage = () => {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '40px',
+    padding: 'clamp(2rem, 5vw, 40px)',
     animation: 'fadeIn 0.3s ease',
   };
 
   const lightboxImgStyle = {
     maxWidth: '90vw',
-    maxHeight: '90vh',
+    maxHeight: '85vh',
     objectFit: 'contain',
   };
 
   const lightboxCaptionStyle = {
     position: 'absolute',
-    bottom: '40px',
-    left: '40px',
-    right: '40px',
+    bottom: 'clamp(2rem, 3vw, 40px)',
+    left: 'clamp(1rem, 3vw, 40px)',
+    right: 'clamp(1rem, 3vw, 40px)',
     color: '#fff',
-    fontSize: '14px',
+    fontSize: 'clamp(12px, 1.5vw, 14px)',
     letterSpacing: '0.02em',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: '16px',
+    padding: 'clamp(10px, 2vw, 16px)',
   };
 
   const arrowStyle = {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    fontSize: '32px',
+    fontSize: 'clamp(24px, 5vw, 32px)',
     color: '#fff',
     cursor: 'pointer',
-    padding: '10px 20px',
+    padding: 'clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px)',
     userSelect: 'none',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     border: 'none',
@@ -183,12 +177,12 @@ const PhotosPage = () => {
 
   const closeButtonStyle = {
     position: 'absolute',
-    top: '20px',
-    right: '20px',
-    fontSize: '32px',
+    top: 'clamp(10px, 2vw, 20px)',
+    right: 'clamp(10px, 2vw, 20px)',
+    fontSize: 'clamp(24px, 5vw, 32px)',
     color: '#fff',
     cursor: 'pointer',
-    padding: '10px 20px',
+    padding: 'clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px)',
     userSelect: 'none',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     border: 'none',
@@ -197,8 +191,8 @@ const PhotosPage = () => {
 
   const emptyStyle = {
     textAlign: 'center',
-    padding: '80px 20px',
-    fontSize: '16px',
+    padding: 'clamp(3rem, 10vw, 80px) clamp(1rem, 3vw, 20px)',
+    fontSize: 'clamp(14px, 2vw, 16px)',
     letterSpacing: '0.05em',
     color: '#666',
     textTransform: 'uppercase',

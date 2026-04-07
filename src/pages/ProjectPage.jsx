@@ -59,12 +59,12 @@ export default function ProjectPage() {
         onClick={goBack}
         style={{
           position: 'fixed',
-          top: '1.5rem',
-          left: '1.75rem',
+          top: 'clamp(1rem, 2vw, 1.5rem)',
+          left: 'clamp(1rem, 3vw, 1.75rem)',
           background: 'none',
           border: 'none',
           cursor: 'crosshair',
-          fontSize: '11px',
+          fontSize: 'clamp(10px, 1.2vw, 11px)',
           fontFamily: 'inherit',
           letterSpacing: '0.12em',
           color: '#111',
@@ -86,6 +86,7 @@ export default function ProjectPage() {
           style={{
             width: '100%',
             maxHeight: '70vh',
+            minHeight: 'clamp(250px, 50vh, 70vh)',
             objectFit: 'cover',
             display: 'block',
           }}
@@ -93,12 +94,12 @@ export default function ProjectPage() {
       ) : (
         <div style={{
           width: '100%',
-          height: '55vh',
+          minHeight: 'clamp(250px, 50vh, 55vh)',
           background: '#e0deda',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '11px',
+          fontSize: 'clamp(10px, 1.2vw, 11px)',
           letterSpacing: '0.1em',
           color: '#999',
         }}>
@@ -107,37 +108,37 @@ export default function ProjectPage() {
       )}
 
       {/* Content */}
-      <div style={{ padding: '4rem 6rem', maxWidth: '900px' }}>
+      <div style={{ padding: 'clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 6rem)', maxWidth: '900px' }}>
         <h1 style={{
-          fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+          fontSize: 'clamp(2rem, 5vw, 5rem)',
           fontWeight: '700',
           letterSpacing: '0.04em',
           lineHeight: 1,
-          marginBottom: '2rem',
+          marginBottom: 'clamp(1.5rem, 3vw, 2rem)',
         }}>
           {title.toUpperCase()}
         </h1>
 
         <p style={{
-          fontSize: '1rem',
+          fontSize: 'clamp(0.9rem, 1.5vw, 1rem)',
           lineHeight: 1.85,
           color: '#444',
-          marginBottom: '2.5rem',
+          marginBottom: 'clamp(1.5rem, 3vw, 2.5rem)',
           maxWidth: '600px',
           fontWeight: '300',
         }}>
           {description}
         </p>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'clamp(6px, 1.5vw, 8px)', flexWrap: 'wrap' }}>
           {tags.map(tag => (
             <span
               key={tag}
               style={{
-                fontSize: '10px',
+                fontSize: 'clamp(9px, 1.2vw, 10px)',
                 border: '1px solid #111',
                 color: '#111',
-                padding: '4px 10px',
+                padding: 'clamp(3px, 0.8vw, 4px) clamp(8px, 1.5vw, 10px)',
                 letterSpacing: '0.1em',
               }}
             >

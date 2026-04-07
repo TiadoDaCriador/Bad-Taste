@@ -18,16 +18,18 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '1.25rem 2rem',
+    padding: 'clamp(1rem, 3vw, 1.25rem) clamp(1rem, 3vw, 2rem)',
     borderBottom: '1px solid rgba(238,236,232,0.1)',
     position: 'sticky',
     top: 0,
     background: '#111',
     zIndex: 10,
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
-  headerLeft: { display: 'flex', alignItems: 'center', gap: '10px' },
-  tag: { fontSize: '9px', fontWeight: '700', letterSpacing: '0.25em', opacity: 0.35 },
-  body: { maxWidth: '1100px', margin: '0 auto', padding: '3rem 2rem' },
+  headerLeft: { display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 10px)', minWidth: 'fit-content' },
+  tag: { fontSize: 'clamp(7px, 1.5vw, 9px)', fontWeight: '700', letterSpacing: '0.25em', opacity: 0.35 },
+  body: { maxWidth: '1100px', margin: '0 auto', padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)' },
   section: { marginBottom: '4rem' },
   sectionHeader: {
     display: 'flex',
@@ -36,58 +38,61 @@ const s = {
     marginBottom: '1.5rem',
     paddingBottom: '0.75rem',
     borderBottom: '1px solid rgba(238,236,232,0.1)',
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
-  sectionTitle: { fontSize: '9px', fontWeight: '700', letterSpacing: '0.25em', opacity: 0.4 },
+  sectionTitle: { fontSize: 'clamp(8px, 1.5vw, 9px)', fontWeight: '700', letterSpacing: '0.25em', opacity: 0.4 },
   btnPrimary: {
     background: '#eeece8',
     border: 'none',
     color: '#111',
-    fontSize: '9px',
+    fontSize: 'clamp(8px, 1.5vw, 9px)',
     fontFamily: 'Space Grotesk, sans-serif',
     fontWeight: '700',
     letterSpacing: '0.2em',
-    padding: '0.55rem 1.25rem',
+    padding: 'clamp(0.4rem, 1vw, 0.55rem) clamp(0.8rem, 2vw, 1.25rem)',
     cursor: 'crosshair',
+    transition: 'opacity 0.2s',
   },
   btnGhost: {
     background: 'none',
     border: '1px solid rgba(238,236,232,0.2)',
     color: '#eeece8',
-    fontSize: '9px',
+    fontSize: 'clamp(8px, 1.5vw, 9px)',
     fontFamily: 'Space Grotesk, sans-serif',
     fontWeight: '600',
     letterSpacing: '0.15em',
-    padding: '0.45rem 1rem',
+    padding: 'clamp(0.35rem, 1vw, 0.45rem) clamp(0.7rem, 1.5vw, 1rem)',
     cursor: 'crosshair',
-    transition: 'border-color 0.2s',
+    transition: 'all 0.2s',
   },
   btnDanger: {
     background: 'none',
     border: '1px solid rgba(255,80,80,0.25)',
     color: 'rgba(255,100,100,0.7)',
-    fontSize: '9px',
+    fontSize: 'clamp(8px, 1.5vw, 9px)',
     fontFamily: 'Space Grotesk, sans-serif',
     fontWeight: '600',
     letterSpacing: '0.15em',
-    padding: '0.45rem 1rem',
+    padding: 'clamp(0.35rem, 1vw, 0.45rem) clamp(0.7rem, 1.5vw, 1rem)',
     cursor: 'crosshair',
     transition: 'all 0.2s',
   },
-  table: { width: '100%', borderCollapse: 'collapse' },
+  table: { width: '100%', borderCollapse: 'collapse', overflowX: 'auto' },
   th: {
-    fontSize: '8px',
+    fontSize: 'clamp(7px, 1.2vw, 8px)',
     fontWeight: '700',
     letterSpacing: '0.2em',
     opacity: 0.3,
     textAlign: 'left',
-    padding: '0 0.75rem 0.75rem 0',
+    padding: 'clamp(0.4rem, 1vw, 0.75rem)',
     borderBottom: '1px solid rgba(238,236,232,0.08)',
   },
   td: {
-    fontSize: '12px',
+    fontSize: 'clamp(11px, 1.5vw, 12px)',
     fontWeight: '300',
     letterSpacing: '0.03em',
-    padding: '1rem 0.75rem 1rem 0',
+    padding: 'clamp(0.75rem, 1.5vw, 1rem)',
     borderBottom: '1px solid rgba(238,236,232,0.06)',
     verticalAlign: 'middle',
   },
@@ -103,17 +108,17 @@ const s = {
     border: 'none',
     borderBottom: '1px solid rgba(238,236,232,0.2)',
     color: '#eeece8',
-    fontSize: '13px',
+    fontSize: 'clamp(12px, 1.5vw, 13px)',
     fontFamily: 'Space Grotesk, sans-serif',
     fontWeight: '300',
     letterSpacing: '0.04em',
-    padding: '0.65rem 0',
+    padding: 'clamp(0.5rem, 1vw, 0.65rem) 0',
     outline: 'none',
     cursor: 'text',
     width: '100%',
   },
-  formRow: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.75rem' },
-  label: { fontSize: '9px', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.35 },
+  formRow: { display: 'flex', flexDirection: 'column', gap: 'clamp(0.35rem, 1vw, 0.5rem)', marginBottom: 'clamp(1.2rem, 3vw, 1.75rem)' },
+  label: { fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.35 },
 }
 
 function MoveBtn({ dir, onClick }) {
@@ -294,90 +299,259 @@ export default function AdminDashboard() {
           </div>
 
           {projects.length === 0 ? (
-            <p style={{ opacity: 0.3, fontSize: '12px', letterSpacing: '0.05em' }}>Nenhum projeto.</p>
+            <p style={{ opacity: 0.3, fontSize: 'clamp(11px, 1.5vw, 12px)', letterSpacing: '0.05em' }}>Nenhum projeto.</p>
           ) : (
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  <th style={s.th}>ORDEM</th>
-                  <th style={s.th}>THUMB</th>
-                  <th style={s.th}>TÍTULO</th>
-                  <th style={s.th}>SLUG</th>
-                  <th style={s.th}>TAGS</th>
-                  <th style={s.th}>VÍDEO</th>
-                  <th style={s.th}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {projects.map((p, i) => (
-                  <tr key={p.slug}>
-                    <td style={{ ...s.td, width: '60px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <MoveBtn dir="up" onClick={() => moveProject(i, 'up')} />
-                        <MoveBtn dir="down" onClick={() => moveProject(i, 'down')} />
-                      </div>
-                    </td>
-                    <td style={{ ...s.td, width: '64px' }}>
-                      {p.thumbnail
-                        ? <img src={p.thumbnail} alt="" style={s.thumb} />
-                        : <div style={{ ...s.thumb, opacity: 0.15 }} />
-                      }
-                    </td>
-                    <td style={s.td}>
-                      <span style={{ fontWeight: '500' }}>{p.title}</span>
-                    </td>
-                    <td style={s.td}>
-                      <span style={{ opacity: 0.4, fontSize: '11px' }}>{p.slug}</span>
-                    </td>
-                    <td style={s.td}>
-                      <span style={{ opacity: 0.5, fontSize: '11px' }}>{(p.tags || []).join(', ')}</span>
-                    </td>
-                    <td style={s.td}>
-                      <span style={{ opacity: p.videoFull ? 0.5 : 0.2, fontSize: '11px' }}>
-                        {p.videoFull ? '✓' : '—'}
-                      </span>
-                    </td>
-                    <td style={{ ...s.td, width: '180px' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          style={s.btnGhost}
-                          onClick={() => navigate(`/admin/projects/${p.slug}`)}
-                          onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'}
-                          onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}
-                        >
-                          EDITAR
-                        </button>
-                        <button
-                          style={{
-                            ...s.btnDanger,
-                            ...(deleteConfirm === p.slug ? {
-                              background: 'rgba(255,80,80,0.15)',
-                              borderColor: 'rgba(255,80,80,0.6)',
-                              color: '#ff6b6b',
-                            } : {}),
-                          }}
-                          onClick={() => deleteProject(p.slug)}
-                          onMouseEnter={e => {
-                            if (deleteConfirm !== p.slug) {
-                              e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
-                              e.currentTarget.style.color = 'rgba(255,100,100,1)'
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (deleteConfirm !== p.slug) {
-                              e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
-                              e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
-                            }
-                          }}
-                        >
-                          {deleteConfirm === p.slug ? 'CONFIRMAR?' : 'APAGAR'}
-                        </button>
-                      </div>
-                    </td>
+            <div style={{ overflowX: 'auto', marginTop: '1.5rem' }}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>ORDEM</th>
+                    <th style={s.th}>THUMB</th>
+                    <th style={s.th}>TÍTULO</th>
+                    <th style={s.th}>SLUG</th>
+                    <th style={s.th}>TAGS</th>
+                    <th style={s.th}>VÍDEO</th>
+                    <th style={s.th}></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {projects.map((p, i) => (
+                    <tr key={p.slug}>
+                      <td style={{ ...s.td, width: 'clamp(50px, 10vw, 80px)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <MoveBtn dir="up" onClick={() => moveProject(i, 'up')} />
+                          <MoveBtn dir="down" onClick={() => moveProject(i, 'down')} />
+                        </div>
+                      </td>
+                      <td style={{ ...s.td, width: 'clamp(50px, 10vw, 80px)' }}>
+                        {p.thumbnail
+                          ? <img src={p.thumbnail} alt="" style={s.thumb} />
+                          : <div style={{ ...s.thumb, opacity: 0.15 }} />
+                        }
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ fontWeight: '500' }}>{p.title}</span>
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ opacity: 0.4, fontSize: 'clamp(10px, 1.2vw, 11px)' }}>{p.slug}</span>
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ opacity: 0.5, fontSize: 'clamp(10px, 1.2vw, 11px)' }}>{(p.tags || []).join(', ')}</span>
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ opacity: p.videoFull ? 0.5 : 0.2, fontSize: 'clamp(10px, 1.2vw, 11px)' }}>
+                          {p.videoFull ? '✓' : '—'}
+                        </span>
+                      </td>
+                      <td style={{ ...s.td, width: 'clamp(140px, 25vw, 200px)' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            style={s.btnGhost}
+                            onClick={() => navigate(`/admin/projects/${p.slug}`)}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}
+                          >
+                            EDITAR
+                          </button>
+                          <button
+                            style={{
+                              ...s.btnDanger,
+                              ...(deleteConfirm === p.slug ? {
+                                background: 'rgba(255,80,80,0.15)',
+                                borderColor: 'rgba(255,80,80,0.6)',
+                                color: '#ff6b6b',
+                              } : {}),
+                            }}
+                            onClick={() => deleteProject(p.slug)}
+                            onMouseEnter={e => {
+                              if (deleteConfirm !== p.slug) {
+                                e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
+                                e.currentTarget.style.color = 'rgba(255,100,100,1)'
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (deleteConfirm !== p.slug) {
+                                e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
+                                e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
+                              }
+                            }}
+                          >
+                            {deleteConfirm === p.slug ? 'CONFIRMAR?' : 'APAGAR'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Gallery section */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionTitle}>GALERIA DE FOTOS — {gallery.length}</span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <label style={{ ...s.btnPrimary, display: 'inline-block', marginBottom: 0 }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryUpload}
+                  disabled={galleryUploading}
+                  style={{ display: 'none' }}
+                />
+                {galleryUploading ? '+ CARREGANDO...' : '+ ADICIONAR FOTO'}
+              </label>
+              <button
+                style={s.btnGhost}
+                onClick={() => window.open('/fotos', '_blank')}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}
+              >
+                VER GALERIA
+              </button>
+            </div>
+          </div>
+
+          {gallery.length === 0 ? (
+            <p style={{ opacity: 0.3, fontSize: 'clamp(11px, 1.5vw, 12px)', letterSpacing: '0.05em' }}>Nenhuma foto na galeria.</p>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(140px, 20vw, 200px), 1fr))',
+              gap: 'clamp(1rem, 3vw, 1.5rem)',
+              marginTop: '1.5rem'
+            }}>
+              {gallery.map((photo) => (
+                <div
+                  key={photo.id}
+                  style={{
+                    backgroundColor: 'rgba(238,236,232,0.05)',
+                    border: '1px solid rgba(238,236,232,0.1)',
+                    borderRadius: '2px',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(238,236,232,0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(238,236,232,0.3)'
+                    e.currentTarget.style.transform = 'scale(1.02)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(238,236,232,0.05)'
+                    e.currentTarget.style.borderColor = 'rgba(238,236,232,0.1)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                  }}
+                >
+                  <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: '1' }}>
+                    <img
+                      src={photo.path}
+                      alt=""
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'filter 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.85)'}
+                      onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+                    />
+                  </div>
+                  <div style={{ padding: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                    {galleryEditing === photo.id ? (
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={galleryCaption}
+                          onChange={e => setGalleryCaption(e.target.value)}
+                          placeholder="Caption..."
+                          style={{
+                            ...s.inputField,
+                            fontSize: 'clamp(10px, 1.2vw, 11px)',
+                            padding: '0.25rem 0',
+                            marginBottom: 0,
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleGalleryCaption(photo.id)
+                            if (e.key === 'Escape') setGalleryEditing(null)
+                          }}
+                        />
+                        <button
+                          onClick={() => handleGalleryCaption(photo.id)}
+                          style={{
+                            fontSize: 'clamp(9px, 1.2vw, 10px)',
+                            padding: '0.25rem 0.5rem',
+                            background: 'rgba(238,236,232,0.2)',
+                            border: 'none',
+                            color: '#eeece8',
+                            cursor: 'pointer',
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            fontWeight: '600',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(238,236,232,0.4)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(238,236,232,0.2)'}
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          setGalleryEditing(photo.id)
+                          setGalleryCaption(photo.caption || '')
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          opacity: 0.6,
+                          minHeight: '1.2em',
+                          fontSize: 'clamp(10px, 1.2vw, 11px)',
+                          transition: 'opacity 0.2s',
+                          wordBreak: 'break-word'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                      >
+                        {photo.caption || '(sem nome)'}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem', paddingTop: 0 }}>
+                    <button
+                      onClick={() => handleGalleryDelete(photo.id)}
+                      style={{
+                        ...s.btnDanger,
+                        flex: 1,
+                        padding: 'clamp(0.3rem, 1vw, 0.35rem)',
+                        fontSize: 'clamp(8px, 1.2vw, 9px)',
+                        ...(galleryDeleteConfirm === photo.id ? {
+                          background: 'rgba(255,80,80,0.15)',
+                          borderColor: 'rgba(255,80,80,0.6)',
+                          color: '#ff6b6b',
+                        } : {}),
+                      }}
+                      onMouseEnter={e => {
+                        if (galleryDeleteConfirm !== photo.id) {
+                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
+                          e.currentTarget.style.color = 'rgba(255,100,100,1)'
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (galleryDeleteConfirm !== photo.id) {
+                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
+                          e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
+                        }
+                      }}
+                    >
+                      {galleryDeleteConfirm === photo.id ? 'CONFIRMAR?' : 'APAGAR'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </section>
 
@@ -440,103 +614,6 @@ export default function AdminDashboard() {
               {contactsSaved ? 'GUARDADO ✓' : 'GUARDAR'}
             </button>
           </form>
-        </section>
-
-        {/* Gallery section */}
-        <section style={s.section}>
-          <div style={s.sectionHeader}>
-            <span style={s.sectionTitle}>GALERIA DE FOTOS — {gallery.length}</span>
-            <label style={{ ...s.btnPrimary, display: 'inline-block', marginBottom: 0 }}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleGalleryUpload}
-                disabled={galleryUploading}
-                style={{ display: 'none' }}
-              />
-              {galleryUploading ? '+ CARREGANDO...' : '+ ADICIONAR FOTO'}
-            </label>
-          </div>
-
-          {gallery.length === 0 ? (
-            <p style={{ opacity: 0.3, fontSize: '12px', letterSpacing: '0.05em' }}>Nenhuma foto na galeria.</p>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.5rem' }}>
-              {gallery.map((photo) => (
-                <div key={photo.id} style={{ backgroundColor: 'rgba(238,236,232,0.05)', padding: '0.75rem', borderRadius: '4px' }}>
-                  <img src={photo.path} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', marginBottom: '0.75rem' }} />
-                  <div style={{ fontSize: '11px', marginBottom: '0.5rem' }}>
-                    {galleryEditing === photo.id ? (
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <input
-                          autoFocus
-                          type="text"
-                          value={galleryCaption}
-                          onChange={e => setGalleryCaption(e.target.value)}
-                          placeholder="Caption..."
-                          style={{
-                            ...s.inputField,
-                            fontSize: '11px',
-                            padding: '0.25rem 0',
-                            marginBottom: 0,
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleGalleryCaption(photo.id)
-                            if (e.key === 'Escape') setGalleryEditing(null)
-                          }}
-                        />
-                        <button
-                          onClick={() => handleGalleryCaption(photo.id)}
-                          style={{ fontSize: '10px', padding: '0.25rem 0.5rem', background: 'rgba(238,236,232,0.2)', border: 'none', color: '#eeece8', cursor: 'pointer' }}
-                        >
-                          ✓
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => {
-                          setGalleryEditing(photo.id)
-                          setGalleryCaption(photo.caption || '')
-                        }}
-                        style={{ cursor: 'pointer', opacity: 0.6, minHeight: '1.2em' }}
-                      >
-                        {photo.caption || '(sem caption)'}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button
-                      onClick={() => handleGalleryDelete(photo.id)}
-                      style={{
-                        ...s.btnDanger,
-                        flex: 1,
-                        padding: '0.35rem',
-                        ...(galleryDeleteConfirm === photo.id ? {
-                          background: 'rgba(255,80,80,0.15)',
-                          borderColor: 'rgba(255,80,80,0.6)',
-                          color: '#ff6b6b',
-                        } : {}),
-                      }}
-                      onMouseEnter={e => {
-                        if (galleryDeleteConfirm !== photo.id) {
-                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
-                          e.currentTarget.style.color = 'rgba(255,100,100,1)'
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (galleryDeleteConfirm !== photo.id) {
-                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
-                          e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
-                        }
-                      }}
-                    >
-                      {galleryDeleteConfirm === photo.id ? 'CONFIRMAR?' : 'APAGAR'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </section>
       </div>
     </div>

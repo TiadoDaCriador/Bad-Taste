@@ -8,13 +8,13 @@ function LanguageSwitcher() {
   const { lang, changeLanguage } = useLanguage()
 
   return (
-    <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center', flexWrap: 'wrap' }}>
       {LANGUAGES.map((l, i) => (
-        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
           <button
             onClick={() => changeLanguage(l)}
             style={{
-              fontSize: '10px',
+              fontSize: 'clamp(9px, 1.2vw, 10px)',
               fontWeight: '600',
               letterSpacing: '0.15em',
               color: '#111',
@@ -32,7 +32,7 @@ function LanguageSwitcher() {
             {l.toUpperCase()}
           </button>
           {i < LANGUAGES.length - 1 && (
-            <span style={{ fontSize: '10px', color: '#111', opacity: 0.2 }}>|</span>
+            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#111', opacity: 0.2 }}>|</span>
           )}
         </span>
       ))}
@@ -75,6 +75,7 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
       style={{
         position: 'relative',
         aspectRatio: isLast && isOdd ? '32/9' : '16/9',
+        minHeight: 'clamp(150px, 30vw, 300px)',
         overflow: 'hidden',
         cursor: 'crosshair',
         background: '#111',
@@ -146,43 +147,47 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '1.5rem 2rem',
+        padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 2vw, 2rem)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
         pointerEvents: 'none',
+        gap: 'clamp(0.5rem, 2vw, 1rem)',
+        flexWrap: 'wrap',
       }}>
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{
-            fontSize: '9px',
+            fontSize: 'clamp(8px, 1.2vw, 9px)',
             color: '#eeece8',
             opacity: 0.45,
             letterSpacing: '0.2em',
-            marginBottom: '0.35rem',
+            marginBottom: 'clamp(0.2rem, 0.5vw, 0.35rem)',
             fontWeight: '600',
           }}>
             {padded} / {paddedTotal}
           </p>
           <h2 style={{
-            fontSize: 'clamp(0.9rem, 1.8vw, 1.4rem)',
+            fontSize: 'clamp(0.85rem, 2.5vw, 1.4rem)',
             fontWeight: '700',
             color: '#eeece8',
             letterSpacing: '0.08em',
             margin: 0,
+            wordBreak: 'break-word',
           }}>
             {title.toUpperCase()}
           </h2>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '40%' }}>
+        <div style={{ display: 'flex', gap: 'clamp(4px, 1vw, 6px)', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '50%' }}>
           {tags.slice(0, 2).map(tag => (
             <span key={tag} style={{
-              fontSize: '9px',
+              fontSize: 'clamp(8px, 1vw, 9px)',
               border: '1px solid rgba(238,236,232,0.35)',
               color: '#eeece8',
-              padding: '3px 9px',
+              padding: 'clamp(2px, 0.5vw, 3px) clamp(6px, 1vw, 9px)',
               letterSpacing: '0.1em',
               fontWeight: '600',
+              whiteSpace: 'nowrap',
             }}>
               {tag.toUpperCase()}
             </span>
@@ -222,43 +227,55 @@ export default function VideoPage() {
       transition: 'opacity 0.3s ease',
       fontFamily: 'Space Grotesk, sans-serif',
     }}>
+      <style>
+        {`
+          @media (max-width: 768px) {
+            [data-video-grid] {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}
+      </style>
+
       {/* Navbar */}
       <nav style={{
         position: 'sticky',
         top: 0,
         left: 0,
         right: 0,
-        height: '60px',
+        height: 'clamp(50px, 10vw, 60px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 1.75rem',
+        padding: '0 clamp(1rem, 3vw, 1.75rem)',
         zIndex: 100,
         background: '#eeece8',
         borderBottom: '1px solid rgba(17,17,17,0.1)',
+        gap: 'clamp(1rem, 2vw, 1.5rem)',
+        flexWrap: 'wrap',
       }}>
         <Link
           to="/"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: 'clamp(6px, 1.5vw, 10px)',
             textDecoration: 'none',
             cursor: 'crosshair',
           }}
         >
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bad Taste">
+          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bad Taste">
             <rect width="36" height="36" fill="#111"/>
             <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#eeece8">BT</text>
           </svg>
-          <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '0.12em', color: '#111' }}>
+          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#111' }}>
             BAD TASTE
           </span>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 2.5rem)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <span style={{
-            fontSize: '11px',
+            fontSize: 'clamp(10px, 1.2vw, 11px)',
             fontWeight: '700',
             letterSpacing: '0.15em',
             color: '#111',
@@ -271,7 +288,7 @@ export default function VideoPage() {
           <Link
             to="/contactos"
             style={{
-              fontSize: '11px',
+              fontSize: 'clamp(10px, 1.2vw, 11px)',
               fontWeight: '600',
               letterSpacing: '0.15em',
               color: '#111',
@@ -286,13 +303,13 @@ export default function VideoPage() {
             {t.nav.contacts}
           </Link>
 
-          <div style={{ width: '1px', height: '12px', background: '#111', opacity: 0.2 }} />
+          <div style={{ width: '1px', height: 'clamp(10px, 1.5vw, 12px)', background: '#111', opacity: 0.2 }} />
           <LanguageSwitcher />
         </div>
       </nav>
 
       {/* Grid */}
-      <div style={{
+      <div data-video-grid style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         borderBottom: '1px solid rgba(17,17,17,0.12)',
