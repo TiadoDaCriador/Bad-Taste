@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAuthenticated, logout } from '../../admin/adminAuth'
 import { getProjects, saveProjects, getContacts, saveContacts } from '../../admin/adminData'
+import { getGallery, uploadPhoto, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto } from '../../admin/galleryData'
 
 const mono = { fontFamily: 'Space Grotesk, sans-serif' }
 
@@ -145,6 +146,11 @@ export default function AdminDashboard() {
   const [contacts, setContacts] = useState({ email: '', instagram: '', instagramUrl: '', phone: '' })
   const [contactsSaved, setContactsSaved] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [gallery, setGallery] = useState([])
+  const [galleryUploading, setGalleryUploading] = useState(false)
+  const [galleryEditing, setGalleryEditing] = useState(null)
+  const [galleryCaption, setGalleryCaption] = useState('')
+  const [galleryDeleteConfirm, setGalleryDeleteConfirm] = useState(null)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -153,7 +159,13 @@ export default function AdminDashboard() {
     }
     setProjects(getProjects())
     setContacts(getContacts())
+    loadGallery()
   }, [])
+
+  const loadGallery = async () => {
+    const data = await getGallery()
+    setGallery(data.sort((a, b) => (a.order || 0) - (b.order || 0)))
+  }
 
   const handleLogout = () => {
     logout()
@@ -186,6 +198,51 @@ export default function AdminDashboard() {
     saveContacts(contacts)
     setContactsSaved(true)
     setTimeout(() => setContactsSaved(false), 2000)
+  }
+
+  const handleGalleryUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setGalleryUploading(true)
+    try {
+      const uploadResult = await uploadPhoto(file)
+      const photo = await addGalleryPhoto({ path: uploadResult.path, caption: '' })
+      setGallery(prev => [...prev, photo].sort((a, b) => (a.order || 0) - (b.order || 0)))
+    } catch (err) {
+      console.error('Gallery upload error:', err)
+      alert('Erro ao fazer upload: ' + err.message)
+    } finally {
+      setGalleryUploading(false)
+    }
+  }
+
+  const handleGalleryCaption = async (photoId) => {
+    try {
+      await updateGalleryPhoto(photoId, { caption: galleryCaption })
+      setGallery(prev =>
+        prev.map(p => p.id === photoId ? { ...p, caption: galleryCaption } : p)
+      )
+      setGalleryEditing(null)
+      setGalleryCaption('')
+    } catch (err) {
+      console.error('Caption update error:', err)
+    }
+  }
+
+  const handleGalleryDelete = async (photoId) => {
+    if (galleryDeleteConfirm !== photoId) {
+      setGalleryDeleteConfirm(photoId)
+      setTimeout(() => setGalleryDeleteConfirm(null), 3000)
+      return
+    }
+    try {
+      await deleteGalleryPhoto(photoId)
+      setGallery(prev => prev.filter(p => p.id !== photoId))
+      setGalleryDeleteConfirm(null)
+    } catch (err) {
+      console.error('Photo delete error:', err)
+    }
   }
 
   return (
@@ -383,6 +440,103 @@ export default function AdminDashboard() {
               {contactsSaved ? 'GUARDADO ✓' : 'GUARDAR'}
             </button>
           </form>
+        </section>
+
+        {/* Gallery section */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionTitle}>GALERIA DE FOTOS — {gallery.length}</span>
+            <label style={{ ...s.btnPrimary, display: 'inline-block', marginBottom: 0 }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleGalleryUpload}
+                disabled={galleryUploading}
+                style={{ display: 'none' }}
+              />
+              {galleryUploading ? '+ CARREGANDO...' : '+ ADICIONAR FOTO'}
+            </label>
+          </div>
+
+          {gallery.length === 0 ? (
+            <p style={{ opacity: 0.3, fontSize: '12px', letterSpacing: '0.05em' }}>Nenhuma foto na galeria.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.5rem' }}>
+              {gallery.map((photo) => (
+                <div key={photo.id} style={{ backgroundColor: 'rgba(238,236,232,0.05)', padding: '0.75rem', borderRadius: '4px' }}>
+                  <img src={photo.path} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', marginBottom: '0.75rem' }} />
+                  <div style={{ fontSize: '11px', marginBottom: '0.5rem' }}>
+                    {galleryEditing === photo.id ? (
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={galleryCaption}
+                          onChange={e => setGalleryCaption(e.target.value)}
+                          placeholder="Caption..."
+                          style={{
+                            ...s.inputField,
+                            fontSize: '11px',
+                            padding: '0.25rem 0',
+                            marginBottom: 0,
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleGalleryCaption(photo.id)
+                            if (e.key === 'Escape') setGalleryEditing(null)
+                          }}
+                        />
+                        <button
+                          onClick={() => handleGalleryCaption(photo.id)}
+                          style={{ fontSize: '10px', padding: '0.25rem 0.5rem', background: 'rgba(238,236,232,0.2)', border: 'none', color: '#eeece8', cursor: 'pointer' }}
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          setGalleryEditing(photo.id)
+                          setGalleryCaption(photo.caption || '')
+                        }}
+                        style={{ cursor: 'pointer', opacity: 0.6, minHeight: '1.2em' }}
+                      >
+                        {photo.caption || '(sem caption)'}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button
+                      onClick={() => handleGalleryDelete(photo.id)}
+                      style={{
+                        ...s.btnDanger,
+                        flex: 1,
+                        padding: '0.35rem',
+                        ...(galleryDeleteConfirm === photo.id ? {
+                          background: 'rgba(255,80,80,0.15)',
+                          borderColor: 'rgba(255,80,80,0.6)',
+                          color: '#ff6b6b',
+                        } : {}),
+                      }}
+                      onMouseEnter={e => {
+                        if (galleryDeleteConfirm !== photo.id) {
+                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
+                          e.currentTarget.style.color = 'rgba(255,100,100,1)'
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (galleryDeleteConfirm !== photo.id) {
+                          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
+                          e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
+                        }
+                      }}
+                    >
+                      {galleryDeleteConfirm === photo.id ? 'CONFIRMAR?' : 'APAGAR'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

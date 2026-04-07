@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { isAuthenticated } from '../../admin/adminAuth'
 import { getProjects, saveProjects, slugify } from '../../admin/adminData'
+import { uploadPhoto, uploadVideo } from '../../admin/galleryData'
 
 const emptyProject = {
   title: '',
@@ -118,6 +119,7 @@ export default function AdminProjectEditor() {
   const [slugManual, setSlugManual] = useState(false)
   const [focused, setFocused] = useState(null)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState({ thumbnail: false, videoFull: false, videoPreview: false })
 
   useEffect(() => {
     if (!isAuthenticated()) { navigate('/admin'); return }
@@ -151,6 +153,22 @@ export default function AdminProjectEditor() {
       ? 'rgba(238,236,232,0.7)'
       : 'rgba(238,236,232,0.2)',
   })
+
+  const handleFileUpload = async (e, field, uploadFn) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(u => ({ ...u, [field]: true }))
+    try {
+      const result = await uploadFn(file)
+      setForm(f => ({ ...f, [field]: result.path }))
+    } catch (err) {
+      setError(`Erro ao fazer upload do ficheiro: ${err.message}`)
+      console.error(err)
+    } finally {
+      setUploading(u => ({ ...u, [field]: false }))
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -292,7 +310,22 @@ export default function AdminProjectEditor() {
           <span style={s.sectionLabel}>ASSETS</span>
 
           <div style={s.formRow}>
-            <label style={s.label}>THUMBNAIL (path)</label>
+            <label style={s.label}>THUMBNAIL</label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => handleFileUpload(e, 'thumbnail', uploadPhoto)}
+                disabled={uploading.thumbnail}
+                style={{
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  opacity: 0.7,
+                }}
+              />
+              {uploading.thumbnail && <span style={{ fontSize: '11px', opacity: 0.5 }}>A carregar...</span>}
+            </div>
+            <span style={s.hint}>Ou colar o path manualmente:</span>
             <input
               style={inputStyle('thumbnail')}
               value={form.thumbnail}
@@ -301,7 +334,6 @@ export default function AdminProjectEditor() {
               onBlur={() => setFocused(null)}
               placeholder="/images/projeto-thumb.jpg"
             />
-            <span style={s.hint}>Ficheiro em public/images/ → usar /images/ficheiro.jpg</span>
           </div>
 
           {form.thumbnail && (
@@ -316,7 +348,22 @@ export default function AdminProjectEditor() {
           )}
 
           <div style={s.formRow}>
-            <label style={s.label}>VÍDEO COMPLETO (path)</label>
+            <label style={s.label}>VÍDEO COMPLETO</label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={e => handleFileUpload(e, 'videoFull', uploadVideo)}
+                disabled={uploading.videoFull}
+                style={{
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  opacity: 0.7,
+                }}
+              />
+              {uploading.videoFull && <span style={{ fontSize: '11px', opacity: 0.5 }}>A carregar...</span>}
+            </div>
+            <span style={s.hint}>Ou colar o path manualmente:</span>
             <input
               style={inputStyle('videoFull')}
               value={form.videoFull}
@@ -325,7 +372,6 @@ export default function AdminProjectEditor() {
               onBlur={() => setFocused(null)}
               placeholder="/videos/full/video.mp4"
             />
-            <span style={s.hint}>Ficheiro em public/videos/full/ → usar /videos/full/ficheiro.mp4</span>
           </div>
 
           <div style={s.row2}>
@@ -345,6 +391,21 @@ export default function AdminProjectEditor() {
             </div>
             <div style={s.formRow}>
               <label style={s.label}>VÍDEO PREVIEW (opcional)</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={e => handleFileUpload(e, 'videoPreview', uploadVideo)}
+                  disabled={uploading.videoPreview}
+                  style={{
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    opacity: 0.7,
+                  }}
+                />
+                {uploading.videoPreview && <span style={{ fontSize: '11px', opacity: 0.5 }}>A carregar...</span>}
+              </div>
+              <span style={s.hint}>Ou colar o path manualmente:</span>
               <input
                 style={inputStyle('videoPreview')}
                 value={form.videoPreview}

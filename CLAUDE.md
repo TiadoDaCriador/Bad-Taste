@@ -31,47 +31,62 @@ Website de portfólio pessoal com uma experiência visual minimalista e dinâmic
 
 ## Stack Técnica
 - Frontend: **React + Vite**
+- Backend: **Express.js + Multer** (porta 3001, paralelo ao Vite 5173)
 - Animações: **requestAnimationFrame** (sem dependências externas)
 - Anel/segmentos: **SVG** com paths annulares calculados geometricamente
 - Routing: **react-router-dom** v6
 - Styling: **CSS inline** (sem framework)
 - i18n: **contexto React custom** (sem dependências externas) — ES / CA / EN
-- Admin: **localStorage** para persistência de dados (sem backend); auth por password via `.env`
+- Dados: **localStorage** para projetos/contactos; **gallery.json** (servidor) para galeria
+- Admin: auth por password via `VITE_ADMIN_PASSWORD`; upload de ficheiros via Multer
+- Upload: **Multer** para vídeos (`/videos/full/`) e fotos (`/images/`)
 
 ## Estrutura de Ficheiros
 ```
+server/
+  index.js                  — Express app, rotas, middleware CORS/security
+  routes/
+    upload.js               — POST /api/upload/photo, POST /api/upload/video (Multer)
+    gallery.js              — GET/POST/PUT/DELETE /api/gallery (CRUD da galeria)
+  data/
+    gallery.json            — persistência de fotos: [{id, path, caption, order, createdAt}]
+
 src/
   admin/
-    adminData.js            — camada de dados: getProjects/saveProjects, getContacts/saveContacts
-                              lê de localStorage; fallback para data/projects.js se vazio
-                              também exporta slugify()
-    adminAuth.js            — login/logout/isAuthenticated; password via VITE_ADMIN_PASSWORD
-  data/projects.js          — array de projetos estático (fonte de verdade inicial; sem traduções)
+    adminData.js            — getProjects/saveProjects, getContacts/saveContacts (localStorage)
+                              slugify()
+    adminAuth.js            — login/logout/isAuthenticated (sessionStorage)
+    galleryData.js          — getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto (API)
+  data/projects.js          — array de projetos estático (fallback inicial)
   i18n/
-    translations.js         — todas as traduções: UI + títulos/descrições/tags por slug (ES/CA/EN)
-    LanguageContext.jsx     — LanguageProvider + hook useLanguage(); língua guardada em localStorage
+    translations.js         — traduções: UI + títulos/descrições/tags (ES/CA/EN) + fotos
+    LanguageContext.jsx     — LanguageProvider + hook useLanguage()
   components/
-    RotatingWheel.jsx       — anel SVG rotativo + lógica de hover/velocidade
-    VideoPreview.jsx        — caixa de info do projecto (título, descrição, tags); sem vídeo
-    BackgroundSlideshow.jsx — slideshow de fundo com crossfade; no hover mostra vídeo full-screen
+    RotatingWheel.jsx       — anel SVG rotativo + hover/velocidade
+    VideoPreview.jsx        — caixa de info (título, descrição, tags, contador)
+    BackgroundSlideshow.jsx — slideshow de fundo com crossfade
   pages/
-    HomePage.jsx            — homepage: navbar (com seletor ES|CA|EN) + anel + slideshow + footer
+    HomePage.jsx            — homepage: navbar + anel + slideshow + footer
     ProjectPage.jsx         — página de detalhe /projeto/:slug
-    ContactsPage.jsx        — página de contactos (/contactos); fundo preto, fade-in/out, Esc volta
-    VideoPage.jsx           — página /video: grid 2 colunas com todos os projetos; thumbnail → vídeo ao hover; clique navega para /projeto/:slug
+    ContactsPage.jsx        — página /contactos (fundo preto, Esc volta)
+    VideoPage.jsx           — página /video: grid 2 colunas com todos os projetos
+    PhotosPage.jsx          — página /fotos: galeria com lightbox (setas, Esc, counter)
     admin/
-      AdminLogin.jsx        — login do painel (/admin); password via VITE_ADMIN_PASSWORD
-      AdminDashboard.jsx    — painel principal (/admin/dashboard): lista projetos + reordenação + contactos
-      AdminProjectEditor.jsx — editor de projeto (/admin/projects/:slug); "novo" para criar
+      AdminLogin.jsx        — login (/admin)
+      AdminDashboard.jsx    — painel (/admin/dashboard): projetos + reordenação + contactos + galeria
+      AdminProjectEditor.jsx — editor (/admin/projects/:slug): upload de thumbnail, videoFull, videoPreview
   styles/
     global.css              — reset + variáveis de cor
+
 public/
   videos/
-    full/                   — vídeos completos dos projetos
-    preview/                — vídeos de preview separados (opcional, ver abaixo)
-  images/                   — imagens usadas no slideshow de fundo (16 ficheiros PNG)
-.env                        — VITE_ADMIN_PASSWORD (ignorado pelo git)
+    full/                   — vídeos completos (uploadados via Multer)
+  images/                   — imagens: slideshow (16 fixas) + galeria (uploadadas via Multer)
+
+.env                        — VITE_ADMIN_PASSWORD
 .env.example                — template público
+package.json                — scripts: dev (Vite+Express), dev:frontend, server
+vite.config.js              — proxy /api → localhost:3001
 ```
 
 ## Constantes do Anel (RotatingWheel.jsx)
@@ -92,11 +107,29 @@ public/
 - `slugify(text)` — gera slug a partir de texto (remove acentos, substitui espaços por `-`)
 - Para ligar a backend: substituir implementação de `getProjects`/`saveProjects` por chamadas API — interface mantém-se
 
+## API Backend (`server/`)
+- Rota `/api/upload/photo` — `POST` (Multer) → salva em `public/images/` → retorna `{path, filename}`
+- Rota `/api/upload/video` — `POST` (Multer) → salva em `public/videos/full/` → retorna `{path, filename}`
+- Rota `/api/gallery` — `GET` lista fotos | `POST` adiciona foto
+- Rota `/api/gallery/:id` — `PUT` edita caption/order | `DELETE` apaga + remove ficheiro
+- Servidor roda na **porta 3001** (paralelo ao Vite 5173)
+- CORS configurado para `localhost:5173` e `localhost:3000`
+- Vite proxy: `/api` → `localhost:3001`
+
+## Galeria de Fotos
+- Dados persistidos em `server/data/gallery.json`: `[{id, path, caption, order, createdAt}, ...]`
+- Cada foto tem `id` (UUID), `path` (ex: `/images/1234-foto.jpg`), `caption`, `order` (para reordenação)
+- Upload: seleciona ficheiro no admin → `POST /api/upload/photo` → retorna path → `POST /api/gallery` adiciona à galeria
+- Página `/fotos` — grid responsivo 3 col. (2 tablet, 1 mobile) → lightbox ao clicar
+- Lightbox: overlay escuro, setas (◂ ›), Esc fecha, counter `01/N`, caption exibida
+- Apagar foto: `DELETE /api/gallery/:id` remove do JSON + ficheiro do disco
+
 ## Painel de Admin
 - Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`)
-- Rota `/admin/dashboard` — lista de projetos com reordenação (▲▼), editar, apagar; edição de contactos
+- Rota `/admin/dashboard` — lista de projetos com reordenação (▲▼), editar, apagar; **edição de contactos**; **gestão de galeria**
 - Rota `/admin/projects/novo` — criar novo projeto
 - Rota `/admin/projects/:slug` — editar projeto existente
+- **Upload direto**: botões de file input em AdminProjectEditor para thumbnail, videoFull, videoPreview → com loading state
 - Auth: sessionStorage (`bt_admin_auth`); perde-se ao fechar o tab
 - Design: fundo `#111`, tema escuro, mesma tipografia Space Grotesk
 
@@ -198,6 +231,18 @@ Cada projeto tem:
 - [x] Admin: editar contactos (email, Instagram handle, Instagram URL, telemóvel)
 - [x] Camada de dados `adminData.js`: páginas públicas lêem de localStorage (fallback para projects.js)
 - [x] `.env` criado e ignorado pelo git; `.env.example` como template
+- [x] Backend Express.js na porta 3001 (paralelo ao Vite 5173)
+- [x] Multer: upload de fotos (`/images/`) e vídeos (`/videos/full/`)
+- [x] API gallery CRUD: GET/POST/PUT/DELETE `/api/gallery` com persistência em JSON
+- [x] Camada `galleryData.js`: getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto
+- [x] Vite proxy: `/api` → `localhost:3001`
+- [x] Scripts npm: `dev` (Vite+Express), `dev:frontend`, `server`
+- [x] Página `/fotos` (PhotosPage.jsx): grid responsivo 3 col (2 tablet, 1 mobile)
+- [x] Lightbox na galeria: overlay, setas (◂ ›), Esc fecha, counter `01/N`, caption
+- [x] AdminDashboard com secção GALERIA: upload de fotos, edição de caption, reordenação, apagar com confirmação
+- [x] AdminProjectEditor com upload direto: thumbnail, videoFull, videoPreview (com loading state)
+- [x] Traduções para galeria (ES/CA/EN): `t.photos.title`, `t.photos.empty`
+- [x] NavBar: link FOTOS atualizado de `#` para `/fotos`
 - [ ] Formulário de contacto ligado a serviço de envio real (Formspree / Resend / etc.) — atualmente só UI
 - [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
 - [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)

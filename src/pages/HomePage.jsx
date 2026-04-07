@@ -48,7 +48,7 @@ function Navbar() {
 
   const navLinks = [
     { label: t.nav.video, to: '/video' },
-    { label: t.nav.photos, to: '#' },
+    { label: t.nav.photos, to: '/fotos' },
     { label: t.nav.contacts, to: '/contactos' },
   ]
 

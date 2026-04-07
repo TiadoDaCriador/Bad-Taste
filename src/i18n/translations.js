@@ -68,6 +68,10 @@ export const translations = {
         tags: ['Web', 'UX', 'Artes Escénicas'],
       },
     },
+    photos: {
+      title: 'GALERÍA',
+      empty: 'No hay fotos disponibles',
+    },
   },
 
   ca: {
@@ -139,6 +143,10 @@ export const translations = {
         tags: ['Web', 'UX', "Arts Escèniques"],
       },
     },
+    photos: {
+      title: 'GALERIA',
+      empty: 'No hi ha fotos disponibles',
+    },
   },
 
   en: {
@@ -209,6 +217,10 @@ export const translations = {
         description: 'Digital archive and curation platform for a performing arts company.',
         tags: ['Web', 'UX', 'Performing Arts'],
       },
+    },
+    photos: {
+      title: 'GALLERY',
+      empty: 'No photos available',
     },
   },
 }
