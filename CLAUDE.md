@@ -126,12 +126,16 @@ vite.config.js              — proxy /api → localhost:3001
 
 ## Painel de Admin
 - Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`)
-- Rota `/admin/dashboard` — lista de projetos com reordenação (▲▼), editar, apagar; **edição de contactos**; **gestão de galeria**
+- Rota `/admin/dashboard` — **ORDEM: Projetos → Galeria → Contactos**
+  - Lista de projetos com reordenação (▲▼), editar, apagar
+  - **Gestão de galeria** (ANTES de contactos): grid responsivo de fotos com cards interativas
+  - Edição de contactos (email, Instagram, telemóvel)
 - Rota `/admin/projects/novo` — criar novo projeto
 - Rota `/admin/projects/:slug` — editar projeto existente
 - **Upload direto**: botões de file input em AdminProjectEditor para thumbnail, videoFull, videoPreview → com loading state
 - Auth: sessionStorage (`bt_admin_auth`); perde-se ao fechar o tab
 - Design: fundo `#111`, tema escuro, mesma tipografia Space Grotesk
+- **Galeria no Admin**: cards com imagem, nome/caption editável ao clicar, hover com efeito visual (background, escala), botão "VER GALERIA" para link rápido
 
 ## Dados dos Projetos (`src/data/projects.js`)
 Cada projeto tem:
@@ -156,6 +160,20 @@ Cada projeto tem:
 - Se `videoPreview` estiver definido, tem prioridade sobre o clip automático
 - Constante `CLIP_DURATION = 20` em `BackgroundSlideshow.jsx`
 - Prop `videoProject` — quando definido, faz fade-in do vídeo full-screen (substitui o slideshow)
+
+## Responsividade (Fluid Design)
+- **Técnica principal**: `clamp(min, preferido, max)` em todas as dimensões (font-size, padding, margin, gaps)
+  - Exemplo: `font-size: clamp(12px, 1.5vw, 13px)` — escala entre 12px-13px baseado em viewport
+  - Exemplo: `padding: clamp(1rem, 3vw, 2rem)` — escala entre 1rem-2rem baseado em viewport
+- **Sem breakpoints abruptos**: layout flui naturalmente entre mobile/tablet/desktop
+- **Aplicado a todas as páginas**:
+  - HomePage: navbar (logo, gaps, altura), footer grid (`auto-fit`)
+  - VideoPage: navbar, grid 2 col (desktop) → 1 col (mobile via media query), video cards
+  - PhotosPage: grid dinamicamente responsivo, lightbox com padding/fonts escaláveis
+  - ProjectPage: back button, vídeo, conteúdo, títulos
+  - ContactsPage: header flexível, layout 2 col → 1 col em mobile (media query), formulário
+  - AdminDashboard: tabela com scrolling, inputs, buttons, espaçamento
+- **Benefício**: tipografia e espaçamento sempre legível/proporcional, sem saltos de tamanho
 
 ## BackgroundSlideshow (`src/components/BackgroundSlideshow.jsx`)
 - Dois slots alternados (A/B) com `backgroundImage` CSS — crossfade suave sem flash
@@ -243,6 +261,16 @@ Cada projeto tem:
 - [x] AdminProjectEditor com upload direto: thumbnail, videoFull, videoPreview (com loading state)
 - [x] Traduções para galeria (ES/CA/EN): `t.photos.title`, `t.photos.empty`
 - [x] NavBar: link FOTOS atualizado de `#` para `/fotos`
+- [x] Galeria reorganizada no admin: agora ACIMA de contactos
+- [x] Cards de galeria no admin com nome/caption, hover effects (background, escala, imagem mais escura)
+- [x] Botão "VER GALERIA" no admin dashboard para acesso rápido
+- [x] Responsividade completa em **todas as páginas**: `clamp()` para fluid typography/spacing
+  - [x] HomePage: navbar, language switcher, footer responsivos
+  - [x] VideoPage: navbar, grid 2 col → 1 col mobile, cards responsivos
+  - [x] PhotosPage: grid dinâmico, lightbox responsivo
+  - [x] ProjectPage: back button, vídeo, conteúdo responsivos
+  - [x] ContactsPage: header, layout 2 col → 1 col mobile, formulário responsivo
+  - [x] AdminDashboard: tabela, inputs, buttons, espaçamento responsivos
 - [ ] Formulário de contacto ligado a serviço de envio real (Formspree / Resend / etc.) — atualmente só UI
 - [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
 - [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)
