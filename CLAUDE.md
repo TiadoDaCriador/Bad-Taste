@@ -1,0 +1,160 @@
+# Bad Taste — Portfolio Interativo
+
+## Visão Geral
+
+Website de portfólio pessoal com uma experiência visual minimalista e dinâmica. A homepage é dominada por um anel rotativo (donut/annular), dividido em segmentos — cada segmento representa um projeto.
+
+## Conceito Principal
+
+### Anel Rotativo (Homepage)
+- Um anel fino (donut/annular) ocupa o centro do ecrã — sem texto nos segmentos
+- Divide-se em N segmentos iguais (um por projeto), separados por gaps finos
+- **O anel cresce automaticamente**: basta adicionar um projeto ao array — o anel recalcula `360° / n` segmentos
+- Roda continuamente em loop, de forma suave e constante
+- Ao hover/tap num segmento:
+  - A rotação abranda progressivamente
+  - O segmento torna-se **transparente** (o fill/thumbnail dissolvem-se, o vídeo do fundo é visível através do arco)
+  - O vídeo do projeto aparece em full-screen no fundo (fade suave, substitui o slideshow)
+  - Surge uma caixa de info (canto inferior direito) com título, descrição, tags e contador `01 / N`
+- Ao retirar o hover, a rotação retoma gradualmente
+- Mobile: primeiro tap seleciona (preview), segundo tap navega para o projeto
+- Ao clicar: o anel faz fade-out (300ms) antes de navegar — transição suave
+- Ao voltar da página de detalhe: o segmento correspondente fica brevemente destacado (stroke mais espesso, 1.5s)
+
+### Filosofia de Design
+- Minimalista: fundo bege claro (`#eeece8`), preto e branco, sem cor decorativa
+- Tipografia **Space Grotesk** em caps, letra fina, espacejamento generoso
+- Segmentos com thumbnail mostram a foto do projeto; ao hover o fill/thumbnail dissolvem-se, revelando o vídeo por baixo
+- Segmentos sem thumbnail ficam bege (`#eeece8`); ao hover ficam transparentes
+- Os vídeos de preview (clip 20s) aparecem em full-screen no fundo ao hover (substituem o slideshow)
+- O slideshow corre continuamente enquanto não há hover; pausa ao hover
+
+## Stack Técnica
+- Frontend: **React + Vite**
+- Animações: **requestAnimationFrame** (sem dependências externas)
+- Anel/segmentos: **SVG** com paths annulares calculados geometricamente
+- Routing: **react-router-dom** v6
+- Styling: **CSS inline** (sem framework)
+
+## Estrutura de Ficheiros
+```
+src/
+  data/projects.js          — array de projectos (fonte de verdade)
+  components/
+    RotatingWheel.jsx       — anel SVG rotativo + lógica de hover/velocidade
+    VideoPreview.jsx        — caixa de info do projecto (título, descrição, tags); sem vídeo
+    BackgroundSlideshow.jsx — slideshow de fundo com crossfade; no hover mostra vídeo full-screen
+  pages/
+    HomePage.jsx            — homepage: navbar + anel + slideshow + footer de contactos
+    ProjectPage.jsx         — página de detalhe /projeto/:slug
+    ContactsPage.jsx        — página de contactos (/contactos); fundo preto, fade-in/out, Esc volta
+  styles/
+    global.css              — reset + variáveis de cor
+public/
+  videos/
+    full/                   — vídeos completos dos projetos
+    preview/                — vídeos de preview separados (opcional, ver abaixo)
+  images/                   — imagens usadas no slideshow de fundo (16 ficheiros PNG)
+```
+
+## Constantes do Anel (RotatingWheel.jsx)
+- `R_OUTER = 300` — raio exterior
+- `R_INNER = 245` — raio interior (anel fino, ~55px de espessura)
+- `GAP_DEG = 1.2` — gap em graus entre segmentos
+- `NORMAL_SPEED = 0.25` — graus por frame em rotação normal
+- `SLOW_SPEED = 0.015` — graus por frame no hover/tap
+- Interpolação de velocidade: `speed += (target - speed) * 0.035` por frame
+- Sem texto nos segmentos — títulos aparecem apenas no painel VideoPreview
+
+## Dados dos Projetos (`src/data/projects.js`)
+Cada projeto tem:
+- `title` — nome do projeto
+- `slug` — identificador para URL
+- `color` — cor reservada (usada futuramente; atualmente não usada no anel)
+- `videoFull` — path para o vídeo completo (ex: `/videos/full/alpha.mp4`)
+- `previewStart` — segundo de início do clip de 20s automático (ex: `45` = começa aos 0:45; `0` = início)
+- `videoPreview` — (opcional) ficheiro de preview separado; se definido, sobrepõe-se ao clip automático
+- `thumbnail` — (opcional) path para imagem estática do projeto (ex: `/images/alpha-thumb.jpg`); aparece no segmento do anel; ao hover dissolve-se (fica transparente, revelando o vídeo de fundo)
+- `description` — texto descritivo
+- `tags` — categorias/tecnologias
+
+### Paths de assets
+- Paths em `public/` devem começar com `/` (sem `/public/` no path): ex. `/images/foto.png`, `/videos/full/video.mp4`
+- O prefixo `/public/` é inválido em Vite — Vite serve `public/` na raiz
+
+### Lógica de Preview de Vídeo (BackgroundSlideshow.jsx)
+- **Clip automático**: usa `videoFull` + `previewStart` — não precisa de ficheiro separado
+- Toca 20 segundos a partir de `previewStart`; quando atinge `previewStart + 20s`, volta ao início do clip
+- `preload="metadata"` — só carrega metadados ao hover, não o vídeo completo
+- Se `videoPreview` estiver definido, tem prioridade sobre o clip automático
+- Constante `CLIP_DURATION = 20` em `BackgroundSlideshow.jsx`
+- Prop `videoProject` — quando definido, faz fade-in do vídeo full-screen (substitui o slideshow)
+
+## BackgroundSlideshow (`src/components/BackgroundSlideshow.jsx`)
+- Dois slots alternados (A/B) com `backgroundImage` CSS — crossfade suave sem flash
+- `SHOW_DURATION = 3000ms` — tempo por imagem
+- `FADE_DURATION = 900ms` — duração do crossfade
+- Prop `paused` — quando `true`, o intervalo não avança (imagem actual fica congelada)
+- Prop `videoProject` — quando definido, faz fade-in de `<video>` full-screen (objectFit: cover) sobre o slideshow; ao remover, fade-out e slideshow retoma
+- Lista de imagens hardcoded no componente (16 ficheiros de `public/images/`)
+- `pointerEvents: none` — não interfere com interações do anel
+- `RotatingWheel` expõe `onHoverChange(project | null)` → `HomePage` passa `hoveredProject` ao slideshow e ao `VideoPreview`
+
+## Projetos Ativos (`src/data/projects.js`)
+
+| Slug | Título | Thumbnail | Vídeo |
+|------|--------|-----------|-------|
+| `alpha` | Forma & Vazio | `/images/foto.png` | `WhatsApp Video 2026-01-27...mp4` |
+| `beta` | Matéria Bruta | `/images/rere.png` | `WhatsApp Video 2026-01-27...mp4` |
+| `granito-sonoro` | Granito Sonoro | `/images/1769655170128-299223567.png` | `/videos/full/1769656081661-870030845.mp4` |
+| `ssonoro-2026` | SSonoro 2026 | `/images/1770268684737-515546375.png` | `WhatsApp Video 2026-01-27...mp4` (teste) |
+| `epsilon` | Arquivo Vivo | `/images/1769656309539-230799152.png` | `WhatsApp Video 2026-01-27...mp4` (teste) |
+
+> Todos os projetos partilham o mesmo vídeo de teste temporariamente.
+> Títulos, descrições e tags são funcionais mas podem ser substituídos pelos reais.
+
+## Estado Atual
+- [x] Setup inicial do projeto (React + Vite)
+- [x] Implementação do anel SVG rotativo (forma annular, sem texto nos segmentos)
+- [x] Lógica de hover com abrandamento suave de rotação
+- [x] Painel VideoPreview com info, tags e contador `01 / N`
+- [x] Página de detalhe do projeto (`/projeto/:slug`) — design monochromático, vídeo full-width, Esc para voltar
+- [x] Estética definida: fundo bege, monocromático, hover transparente, cursor crosshair
+- [x] Tipografia Space Grotesk (Google Fonts)
+- [x] Anel fino: `R_INNER = 245` (espessura ~55px)
+- [x] Mobile: tap para preview, segundo tap para navegar
+- [x] Acessibilidade: `aria-label`, `role="button"`, `tabIndex`, teclado (Enter/Space), `aria-current`
+- [x] Anel dinâmico: cresce automaticamente com cada projeto adicionado ao array
+- [x] Clip automático de 20s a partir de `videoFull` + `previewStart` (sem ficheiro separado)
+- [x] Pastas `public/videos/full/`, `public/videos/preview/`, `public/images/` criadas
+- [x] Slideshow de fundo com crossfade, pausa ao hover no anel
+- [x] Vídeo de preview em full-screen no fundo ao hover (clip 20s, substitui slideshow com fade suave)
+- [x] Caixa de info (título, descrição, tags) no canto inferior direito ao hover — efeito vidro (`backdrop-filter: blur`)
+- [x] Thumbnail do projeto visível no segmento do anel (clipada ao arco); ao hover dissolve-se revelando vídeo
+- [x] Hover: segmento torna-se **transparente** (fill + thumbnail dissolvem-se), não preto
+- [x] Paths de assets corretos para `/images/` e `/videos/` (sem prefixo `/public/`)
+- [x] Transição suave ao navegar: anel faz fade-out (300ms) antes de mudar de página
+- [x] Fade-in ao entrar na ProjectPage; fade-out ao sair
+- [x] Highlight do segmento ao voltar da página de detalhe (stroke espesso, 1.5s)
+- [x] rAF pausa quando o tab não está visível (`visibilitychange`)
+- [x] Animação de entrada do anel: `scale(0) → scale(1)` com spring cubic-bezier ao carregar
+- [x] Painel VideoPreview com efeito vidro (`backdrop-filter: blur(14px)`, fundo semitransparente)
+- [x] Thumbnails reais atribuídas a todos os 5 projetos
+- [x] Granito Sonoro e SSonoro 2026 identificados e configurados com assets reais
+- [x] MP4 movido de `/images/` para `/videos/full/` (Granito Sonoro)
+- [x] Títulos/descrições/tags definidos para todos os projetos (Alpha→"Forma & Vazio", Beta→"Matéria Bruta", Epsilon→"Arquivo Vivo")
+- [x] Todos os projetos com vídeo atribuído (SSonoro 2026 e Epsilon usam vídeo de teste)
+- [x] Logo SVG "BT" no canto superior esquerdo (quadrado preto + texto bege)
+- [x] Navbar fixa (topo): logo + "BAD TASTE" à esquerda; VIDEO / PHOTOS / CONTACTS à direita
+- [x] CONTACTS na navbar navega para `/contactos` (página separada, fundo preto, Esc volta)
+- [x] Footer de contactos na homepage (fundo `#111`): email, Instagram, telemóvel — visível ao fazer scroll
+- [x] Footer tem `position: relative; z-index: 1` para aparecer acima do BackgroundSlideshow fixo
+- [x] `history.scrollRestoration = 'manual'` em `main.jsx` — página começa sempre no topo ao refresh
+- [x] Rota `/contactos` registada em `main.jsx`
+- [ ] Dados reais de contacto substituídos nos placeholders (email, Instagram, telemóvel) em `ContactsPage.jsx` e `HomePage.jsx`
+- [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
+- [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)
+- [ ] Títulos/descrições/tags finais validados pelo cliente
+- [ ] Deploy
+
+> Ver [recomendações.md](recomendações.md) para detalhe completo.
