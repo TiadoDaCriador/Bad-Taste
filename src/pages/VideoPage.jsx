@@ -3,36 +3,26 @@ import { useNavigate, Link } from 'react-router-dom'
 import { getProjects } from '../admin/adminData'
 const projects = getProjects()
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
+import ContactsFooter from '../components/ContactsFooter'
 
 function LanguageSwitcher() {
   const { lang, changeLanguage } = useLanguage()
-
   return (
-    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center' }}>
       {LANGUAGES.map((l, i) => (
         <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
           <button
             onClick={() => changeLanguage(l)}
             style={{
-              fontSize: 'clamp(9px, 1.2vw, 10px)',
-              fontWeight: '600',
-              letterSpacing: '0.15em',
-              color: '#111',
-              background: 'none',
-              border: 'none',
-              cursor: 'crosshair',
-              padding: 0,
-              opacity: lang === l ? 1 : 0.35,
-              transition: 'opacity 0.2s',
-              fontFamily: 'inherit',
+              fontSize: 'clamp(9px, 1.2vw, 10px)', fontWeight: '600', letterSpacing: '0.15em',
+              color: '#eeece8', background: 'none', border: 'none', cursor: 'crosshair', padding: 0,
+              opacity: lang === l ? 1 : 0.35, transition: 'opacity 0.2s', fontFamily: 'inherit',
             }}
             onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
             onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
-          >
-            {l.toUpperCase()}
-          </button>
+          >{l.toUpperCase()}</button>
           {i < LANGUAGES.length - 1 && (
-            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#111', opacity: 0.2 }}>|</span>
+            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#eeece8', opacity: 0.2 }}>|</span>
           )}
         </span>
       ))}
@@ -47,7 +37,7 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
 
   const localized = t.projects[project.slug] || {}
   const title = localized.title || project.title
-  const tags = localized.tags || project.tags
+  const tags = localized.tags || project.tags || []
 
   const handleMouseEnter = () => {
     setHovered(true)
@@ -75,13 +65,10 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
       style={{
         position: 'relative',
         aspectRatio: isLast && isOdd ? '32/9' : '16/9',
-        minHeight: 'clamp(150px, 30vw, 300px)',
         overflow: 'hidden',
         cursor: 'crosshair',
-        background: '#111',
+        background: '#0a0a0a',
         gridColumn: isLast && isOdd ? 'span 2' : 'auto',
-        borderTop: '1px solid rgba(17,17,17,0.12)',
-        borderRight: !isLast || !isOdd ? '1px solid rgba(17,17,17,0.12)' : 'none',
       }}
     >
       {/* Thumbnail */}
@@ -90,13 +77,10 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
           src={project.thumbnail}
           alt={title}
           style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%', objectFit: 'cover',
             opacity: hovered ? 0 : 1,
-            transition: 'opacity 0.5s ease',
+            transition: 'opacity 0.6s ease',
           }}
         />
       )}
@@ -104,11 +88,10 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
       {/* No thumbnail fallback */}
       {!project.thumbnail && (
         <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: '#1a1a1a',
+          position: 'absolute', inset: 0,
+          background: '#181818',
           opacity: hovered ? 0 : 1,
-          transition: 'opacity 0.5s ease',
+          transition: 'opacity 0.6s ease',
         }} />
       )}
 
@@ -122,77 +105,61 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
           loop
           preload="metadata"
           style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%', objectFit: 'cover',
             opacity: hovered ? 1 : 0,
-            transition: 'opacity 0.5s ease',
+            transition: 'opacity 0.6s ease',
           }}
         />
       )}
 
-      {/* Gradient overlay */}
+      {/* Hover overlay */}
       <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)',
+        position: 'absolute', inset: 0,
+        background: hovered ? 'rgba(0,0,0,0.52)' : 'rgba(0,0,0,0)',
+        transition: 'background 0.5s ease',
         pointerEvents: 'none',
       }} />
 
-      {/* Info */}
+      {/* Info — only on hover */}
       <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 2vw, 2rem)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        pointerEvents: 'none',
-        gap: 'clamp(0.5rem, 2vw, 1rem)',
-        flexWrap: 'wrap',
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center', pointerEvents: 'none',
+        padding: 'clamp(1.5rem, 4vw, 3rem)',
+        gap: 'clamp(0.5rem, 1.2vw, 0.8rem)',
+        opacity: hovered ? 1 : 0,
+        transform: hovered ? 'translateY(0)' : 'translateY(8px)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
       }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <p style={{
-            fontSize: 'clamp(8px, 1.2vw, 9px)',
-            color: '#eeece8',
-            opacity: 0.45,
-            letterSpacing: '0.2em',
-            marginBottom: 'clamp(0.2rem, 0.5vw, 0.35rem)',
-            fontWeight: '600',
-          }}>
-            {padded} / {paddedTotal}
-          </p>
-          <h2 style={{
-            fontSize: 'clamp(0.85rem, 2.5vw, 1.4rem)',
-            fontWeight: '700',
-            color: '#eeece8',
-            letterSpacing: '0.08em',
-            margin: 0,
-            wordBreak: 'break-word',
-          }}>
-            {title.toUpperCase()}
-          </h2>
-        </div>
-
-        <div style={{ display: 'flex', gap: 'clamp(4px, 1vw, 6px)', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '50%' }}>
-          {tags.slice(0, 2).map(tag => (
-            <span key={tag} style={{
-              fontSize: 'clamp(8px, 1vw, 9px)',
-              border: '1px solid rgba(238,236,232,0.35)',
-              color: '#eeece8',
-              padding: 'clamp(2px, 0.5vw, 3px) clamp(6px, 1vw, 9px)',
-              letterSpacing: '0.1em',
-              fontWeight: '600',
-              whiteSpace: 'nowrap',
-            }}>
-              {tag.toUpperCase()}
-            </span>
-          ))}
-        </div>
+        <p style={{
+          fontSize: 'clamp(8px, 1vw, 9px)',
+          color: '#eeece8', opacity: 0.5,
+          letterSpacing: '0.3em', fontWeight: '600', margin: 0,
+        }}>
+          {padded} / {paddedTotal}
+        </p>
+        <h2 style={{
+          fontSize: 'clamp(1.1rem, 3vw, 1.8rem)',
+          fontWeight: '700', color: '#eeece8',
+          letterSpacing: '0.1em', margin: 0, lineHeight: 1.05,
+        }}>
+          {title.toUpperCase()}
+        </h2>
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.3rem' }}>
+            {tags.slice(0, 3).map(tag => (
+              <span key={tag} style={{
+                fontSize: 'clamp(7px, 0.9vw, 9px)',
+                color: '#eeece8', opacity: 0.6,
+                letterSpacing: '0.2em', fontWeight: '500',
+              }}>
+                {tag.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -222,88 +189,86 @@ export default function VideoPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#eeece8',
+      background: '#111',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
       fontFamily: 'Space Grotesk, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      <style>
-        {`
-          @media (max-width: 768px) {
-            [data-video-grid] {
-              grid-template-columns: 1fr !important;
-            }
-          }
-        `}
-      </style>
+      <style>{`
+        @media (max-width: 768px) {
+          [data-video-grid] { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
       {/* Navbar */}
       <nav style={{
-        position: 'sticky',
-        top: 0,
-        left: 0,
-        right: 0,
+        position: 'sticky', top: 0,
         height: 'clamp(50px, 10vw, 60px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem, 3vw, 1.75rem)',
-        zIndex: 100,
-        background: '#eeece8',
-        borderBottom: '1px solid rgba(17,17,17,0.1)',
-        gap: 'clamp(1rem, 2vw, 1.5rem)',
-        flexWrap: 'wrap',
+        zIndex: 100, background: '#111',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        gap: 'clamp(1rem, 2vw, 1.5rem)', flexWrap: 'wrap', flexShrink: 0,
       }}>
-        <Link
-          to="/"
+        <button
+          onClick={() => { setVisible(false); setTimeout(() => navigate('/'), 250); }}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'clamp(6px, 1.5vw, 10px)',
-            textDecoration: 'none',
-            cursor: 'crosshair',
+            background: 'none', border: 'none', cursor: 'crosshair',
+            fontSize: 'clamp(10px, 1.2vw, 11px)', fontFamily: 'inherit',
+            letterSpacing: '0.12em', color: '#eeece8', padding: 0,
+            opacity: 0.5, transition: 'opacity 0.2s',
           }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
         >
-          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bad Taste">
-            <rect width="36" height="36" fill="#111"/>
-            <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#eeece8">BT</text>
+          ← {t.project?.back?.replace('← ', '') || 'VOLVER'}
+        </button>
+
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', textDecoration: 'none', cursor: 'crosshair' }}>
+          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" fill="#eeece8"/>
+            <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#111">BT</text>
           </svg>
-          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#111' }}>
+          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#eeece8' }}>
             BAD TASTE
           </span>
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 2.5rem)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <span style={{
-            fontSize: 'clamp(10px, 1.2vw, 11px)',
-            fontWeight: '700',
-            letterSpacing: '0.15em',
-            color: '#111',
-            borderBottom: '1px solid #111',
-            paddingBottom: '1px',
+            fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '700',
+            letterSpacing: '0.15em', color: '#eeece8',
+            borderBottom: '1px solid #eeece8', paddingBottom: '1px',
           }}>
             VIDEO
           </span>
-
+          <Link
+            to="/fotos"
+            style={{
+              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
+              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
+              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
+          >
+            {t.nav?.photos || 'FOTOS'}
+          </Link>
           <Link
             to="/contactos"
             style={{
-              fontSize: 'clamp(10px, 1.2vw, 11px)',
-              fontWeight: '600',
-              letterSpacing: '0.15em',
-              color: '#111',
-              opacity: 0.55,
-              textDecoration: 'none',
-              cursor: 'crosshair',
-              transition: 'opacity 0.2s',
+              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
+              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
+              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
             }}
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.55'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
           >
-            {t.nav.contacts}
+            {t.nav?.contacts || 'CONTACTO'}
           </Link>
-
-          <div style={{ width: '1px', height: 'clamp(10px, 1.5vw, 12px)', background: '#111', opacity: 0.2 }} />
+          <div style={{ width: '1px', height: 'clamp(10px, 1.5vw, 12px)', background: '#eeece8', opacity: 0.15 }} />
           <LanguageSwitcher />
         </div>
       </nav>
@@ -312,7 +277,9 @@ export default function VideoPage() {
       <div data-video-grid style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
-        borderBottom: '1px solid rgba(17,17,17,0.12)',
+        gap: '1px',
+        background: '#000',
+        flex: 1,
       }}>
         {projects.map((project, i) => (
           <VideoCard
@@ -326,6 +293,8 @@ export default function VideoPage() {
           />
         ))}
       </div>
+
+      <ContactsFooter />
     </div>
   )
 }

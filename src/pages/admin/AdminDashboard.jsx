@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { isAuthenticated, logout } from '../../admin/adminAuth'
+import { isAuthenticated, logout, changePassword } from '../../admin/adminAuth'
 import { getProjects, saveProjects, getContacts, saveContacts } from '../../admin/adminData'
-import { getGallery, uploadPhoto, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto } from '../../admin/galleryData'
+import { getGallery, uploadPhoto, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto } from '../../admin/galleryData'
 
 const mono = { fontFamily: 'Space Grotesk, sans-serif' }
 
@@ -156,6 +156,10 @@ export default function AdminDashboard() {
   const [galleryEditing, setGalleryEditing] = useState(null)
   const [galleryCaption, setGalleryCaption] = useState('')
   const [galleryDeleteConfirm, setGalleryDeleteConfirm] = useState(null)
+  const [pwdCurrent, setPwdCurrent] = useState('')
+  const [pwdNew, setPwdNew] = useState('')
+  const [pwdConfirm, setPwdConfirm] = useState('')
+  const [pwdMsg, setPwdMsg] = useState(null)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -248,6 +252,33 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Photo delete error:', err)
     }
+  }
+
+  const handleSetCover = async (photoId) => {
+    try {
+      await setCoverPhoto(photoId)
+      setGallery(prev => prev.map(p => ({ ...p, isCover: p.id === photoId })))
+    } catch (err) {
+      console.error('Set cover error:', err)
+    }
+  }
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault()
+    if (pwdNew !== pwdConfirm) {
+      setPwdMsg({ ok: false, text: 'As novas palavras-passe não coincidem' })
+      return
+    }
+    const result = changePassword(pwdCurrent, pwdNew)
+    if (result.success) {
+      setPwdMsg({ ok: true, text: 'Palavra-passe alterada com sucesso' })
+      setPwdCurrent('')
+      setPwdNew('')
+      setPwdConfirm('')
+    } else {
+      setPwdMsg({ ok: false, text: result.error })
+    }
+    setTimeout(() => setPwdMsg(null), 3000)
   }
 
   return (
@@ -460,6 +491,11 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div style={{ padding: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                    {photo.isCover && (
+                      <p style={{ fontSize: '8px', letterSpacing: '0.15em', opacity: 0.4, marginBottom: '0.35rem', fontWeight: '700' }}>
+                        ★ NOME VISÍVEL NA PÁGINA FOTOS
+                      </p>
+                    )}
                     {galleryEditing === photo.id ? (
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <input
@@ -467,7 +503,7 @@ export default function AdminDashboard() {
                           type="text"
                           value={galleryCaption}
                           onChange={e => setGalleryCaption(e.target.value)}
-                          placeholder="Caption..."
+                          placeholder="Nome / caption..."
                           style={{
                             ...s.inputField,
                             fontSize: 'clamp(10px, 1.2vw, 11px)',
@@ -521,6 +557,24 @@ export default function AdminDashboard() {
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem', paddingTop: 0 }}>
                     <button
+                      onClick={() => handleSetCover(photo.id)}
+                      title={photo.isCover ? 'Foto de capa atual' : 'Definir como capa'}
+                      style={{
+                        ...s.btnGhost,
+                        flex: 1,
+                        padding: 'clamp(0.3rem, 1vw, 0.35rem)',
+                        fontSize: 'clamp(8px, 1.2vw, 9px)',
+                        ...(photo.isCover ? {
+                          background: 'rgba(238,236,232,0.15)',
+                          borderColor: 'rgba(238,236,232,0.6)',
+                        } : {}),
+                      }}
+                      onMouseEnter={e => { if (!photo.isCover) e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)' }}
+                      onMouseLeave={e => { if (!photo.isCover) e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)' }}
+                    >
+                      {photo.isCover ? '★ CAPA' : '☆ CAPA'}
+                    </button>
+                    <button
                       onClick={() => handleGalleryDelete(photo.id)}
                       style={{
                         ...s.btnDanger,
@@ -553,6 +607,66 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Password section */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionTitle}>SEGURANÇA — ALTERAR PALAVRA-PASSE</span>
+          </div>
+          <form onSubmit={handlePasswordChange} style={{ maxWidth: '480px' }}>
+            <div style={s.formRow}>
+              <label style={s.label}>PALAVRA-PASSE ATUAL</label>
+              <input
+                style={s.inputField}
+                type="password"
+                value={pwdCurrent}
+                onChange={e => setPwdCurrent(e.target.value)}
+                placeholder="Palavra-passe atual..."
+                autoComplete="current-password"
+              />
+            </div>
+            <div style={s.formRow}>
+              <label style={s.label}>NOVA PALAVRA-PASSE</label>
+              <input
+                style={s.inputField}
+                type="password"
+                value={pwdNew}
+                onChange={e => setPwdNew(e.target.value)}
+                placeholder="Mínimo 6 caracteres..."
+                autoComplete="new-password"
+              />
+            </div>
+            <div style={s.formRow}>
+              <label style={s.label}>CONFIRMAR NOVA PALAVRA-PASSE</label>
+              <input
+                style={s.inputField}
+                type="password"
+                value={pwdConfirm}
+                onChange={e => setPwdConfirm(e.target.value)}
+                placeholder="Repetir nova palavra-passe..."
+                autoComplete="new-password"
+              />
+            </div>
+            {pwdMsg && (
+              <p style={{
+                fontSize: 'clamp(10px, 1.2vw, 11px)',
+                letterSpacing: '0.05em',
+                color: pwdMsg.ok ? 'rgba(100,220,100,0.9)' : 'rgba(255,100,100,0.9)',
+                marginBottom: '1rem',
+              }}>
+                {pwdMsg.text}
+              </p>
+            )}
+            <button
+              type="submit"
+              style={s.btnPrimary}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              ALTERAR PALAVRA-PASSE
+            </button>
+          </form>
         </section>
 
         {/* Contacts section */}

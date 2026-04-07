@@ -1,329 +1,275 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { useLanguage, LANGUAGES } from '../i18n/LanguageContext';
 import { getGallery } from '../admin/galleryData';
+import ContactsFooter from '../components/ContactsFooter';
+
+function LanguageSwitcher() {
+  const { lang, changeLanguage } = useLanguage()
+  return (
+    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center' }}>
+      {LANGUAGES.map((l, i) => (
+        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
+          <button
+            onClick={() => changeLanguage(l)}
+            style={{
+              fontSize: 'clamp(9px, 1.2vw, 10px)', fontWeight: '600', letterSpacing: '0.15em',
+              color: '#eeece8', background: 'none', border: 'none', cursor: 'crosshair', padding: 0,
+              opacity: lang === l ? 1 : 0.35, transition: 'opacity 0.2s', fontFamily: 'inherit',
+            }}
+            onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
+            onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
+          >{l.toUpperCase()}</button>
+          {i < LANGUAGES.length - 1 && (
+            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#eeece8', opacity: 0.2 }}>|</span>
+          )}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function PhotoAlbumCard({ photo, index, total, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  const name = photo.caption || 'FOTOS'
+  const padded = String(index + 1).padStart(2, '0')
+  const paddedTotal = String(total).padStart(2, '0')
+
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'relative',
+        aspectRatio: '16/9',
+        overflow: 'hidden',
+        cursor: 'crosshair',
+        background: '#0a0a0a',
+      }}
+    >
+      {/* Image */}
+      <img
+        src={photo.path}
+        alt={name}
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%', objectFit: 'cover',
+          transition: 'transform 0.8s ease',
+          transform: hovered ? 'scale(1.04)' : 'scale(1)',
+        }}
+      />
+
+      {/* Hover overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: hovered ? 'rgba(0,0,0,0.52)' : 'rgba(0,0,0,0)',
+        transition: 'background 0.5s ease',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Info — only on hover */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center', pointerEvents: 'none',
+        padding: 'clamp(1.5rem, 4vw, 3rem)',
+        gap: 'clamp(0.4rem, 1vw, 0.6rem)',
+        opacity: hovered ? 1 : 0,
+        transform: hovered ? 'translateY(0)' : 'translateY(8px)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
+      }}>
+        <p style={{
+          fontSize: 'clamp(8px, 1vw, 9px)',
+          color: '#eeece8', opacity: 0.5,
+          letterSpacing: '0.3em', fontWeight: '600', margin: 0,
+        }}>
+          {padded} / {paddedTotal}
+        </p>
+        <h2 style={{
+          fontSize: 'clamp(1.1rem, 3vw, 1.8rem)',
+          fontWeight: '700', color: '#eeece8',
+          letterSpacing: '0.1em', margin: 0, lineHeight: 1.05,
+        }}>
+          {name.toUpperCase()}
+        </h2>
+        <p style={{
+          fontSize: 'clamp(7px, 0.9vw, 9px)',
+          color: '#eeece8', opacity: 0.5,
+          letterSpacing: '0.25em', fontWeight: '500', margin: 0,
+        }}>
+          VER GALERIA
+        </p>
+      </div>
+    </div>
+  )
+}
 
 const PhotosPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [gallery, setGallery] = useState([]);
+  const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [visible, setVisible] = useState(false);
 
-  // Fetch gallery on mount
   useEffect(() => {
     const fetchGallery = async () => {
       setLoading(true);
       const data = await getGallery();
-      // Sort by order
       const sorted = data.sort((a, b) => (a.order || 0) - (b.order || 0));
-      setGallery(sorted);
+      // Use cover photo as the album entry; fallback to first photo
+      const cover = sorted.find(p => p.isCover) || sorted[0] || null;
+      setAlbums(cover ? [cover] : []);
       setLoading(false);
     };
-
     fetchGallery();
+    requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  // Handle keyboard (ESC, arrows)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setLightboxIndex(null);
-        navigate('/');
-      }
-      if (lightboxIndex !== null) {
-        if (e.key === 'ArrowLeft') {
-          setLightboxIndex((prev) => (prev > 0 ? prev - 1 : gallery.length - 1));
-        }
-        if (e.key === 'ArrowRight') {
-          setLightboxIndex((prev) => (prev < gallery.length - 1 ? prev + 1 : 0));
-        }
-      }
+      if (e.key === 'Escape') goBack();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, gallery.length, navigate]);
+  }, []);
 
-  const openLightbox = (index) => {
-    setLightboxIndex(index);
+  const goBack = () => {
+    setVisible(false);
+    setTimeout(() => navigate('/'), 250);
   };
 
-  const closeLightbox = () => {
-    setLightboxIndex(null);
-  };
-
-  const goToPrevious = (e) => {
-    e.stopPropagation();
-    setLightboxIndex((prev) => (prev > 0 ? prev - 1 : gallery.length - 1));
-  };
-
-  const goToNext = (e) => {
-    e.stopPropagation();
-    setLightboxIndex((prev) => (prev < gallery.length - 1 ? prev + 1 : 0));
-  };
-
-  // Styles
-  const pageStyle = {
-    minHeight: '100vh',
-    backgroundColor: '#eeece8',
-    padding: 'clamp(80px, 12vw, 120px) clamp(1rem, 3vw, 40px) clamp(2rem, 5vw, 60px)',
-    fontFamily: "'Space Grotesk', sans-serif",
-  };
-
-  const containerStyle = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-  };
-
-  const titleStyle = {
-    fontSize: 'clamp(24px, 5vw, 32px)',
-    fontWeight: 300,
-    letterSpacing: '0.05em',
-    textTransform: 'uppercase',
-    marginBottom: 'clamp(2rem, 4vw, 60px)',
-    color: '#000',
-  };
-
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(180px, 40vw, 280px), 1fr))',
-    gap: 'clamp(1rem, 3vw, 24px)',
-  };
-
-  const cardStyle = {
-    position: 'relative',
-    aspectRatio: '1',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    backgroundColor: '#ddd',
-    borderRadius: '0px',
-    transition: 'transform 0.3s ease, opacity 0.3s ease',
-  };
-
-  const cardHoverStyle = {
-    transform: 'scale(1.02)',
-    opacity: 0.9,
-  };
-
-  const imgStyle = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  };
-
-  const captionStyle = {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    color: '#fff',
-    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
-    fontSize: 'clamp(10px, 1.2vw, 12px)',
-    fontWeight: 400,
-    letterSpacing: '0.02em',
-    textTransform: 'uppercase',
-    maxHeight: '60px',
-    overflow: 'hidden',
-  };
-
-  const lightboxStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: 'clamp(2rem, 5vw, 40px)',
-    animation: 'fadeIn 0.3s ease',
-  };
-
-  const lightboxImgStyle = {
-    maxWidth: '90vw',
-    maxHeight: '85vh',
-    objectFit: 'contain',
-  };
-
-  const lightboxCaptionStyle = {
-    position: 'absolute',
-    bottom: 'clamp(2rem, 3vw, 40px)',
-    left: 'clamp(1rem, 3vw, 40px)',
-    right: 'clamp(1rem, 3vw, 40px)',
-    color: '#fff',
-    fontSize: 'clamp(12px, 1.5vw, 14px)',
-    letterSpacing: '0.02em',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 'clamp(10px, 2vw, 16px)',
-  };
-
-  const arrowStyle = {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontSize: 'clamp(24px, 5vw, 32px)',
-    color: '#fff',
-    cursor: 'pointer',
-    padding: 'clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px)',
-    userSelect: 'none',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    border: 'none',
-    transition: 'backgroundColor 0.2s',
-  };
-
-  const closeButtonStyle = {
-    position: 'absolute',
-    top: 'clamp(10px, 2vw, 20px)',
-    right: 'clamp(10px, 2vw, 20px)',
-    fontSize: 'clamp(24px, 5vw, 32px)',
-    color: '#fff',
-    cursor: 'pointer',
-    padding: 'clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px)',
-    userSelect: 'none',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    border: 'none',
-    transition: 'backgroundColor 0.2s',
-  };
-
-  const emptyStyle = {
-    textAlign: 'center',
-    padding: 'clamp(3rem, 10vw, 80px) clamp(1rem, 3vw, 20px)',
-    fontSize: 'clamp(14px, 2vw, 16px)',
-    letterSpacing: '0.05em',
-    color: '#666',
-    textTransform: 'uppercase',
+  const goToGallery = () => {
+    setVisible(false);
+    setTimeout(() => navigate('/fotos/galeria'), 250);
   };
 
   if (loading) {
     return (
-      <div style={pageStyle}>
-        <div style={containerStyle}>
-          <div style={emptyStyle}>Carregando...</div>
-        </div>
+      <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
+        <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#eeece8', opacity: 0.3 }}>—</span>
       </div>
     );
   }
 
   return (
-    <div style={pageStyle}>
-      <style>
-        {`
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
+    <div style={{
+      minHeight: '100vh',
+      background: '#111',
+      fontFamily: 'Space Grotesk, sans-serif',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.3s ease',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* Navbar */}
+      <nav style={{
+        position: 'sticky', top: 0,
+        height: 'clamp(50px, 10vw, 60px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 clamp(1rem, 3vw, 1.75rem)',
+        zIndex: 100, background: '#111',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        gap: 'clamp(1rem, 2vw, 1.5rem)', flexWrap: 'wrap', flexShrink: 0,
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            background: 'none', border: 'none', cursor: 'crosshair',
+            fontSize: 'clamp(10px, 1.2vw, 11px)', fontFamily: 'inherit',
+            letterSpacing: '0.12em', color: '#eeece8', padding: 0,
+            opacity: 0.5, transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+        >
+          ← {t.project?.back?.replace('← ', '') || 'VOLVER'}
+        </button>
 
-          @media (max-width: 768px) {
-            [data-grid] {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-          }
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', textDecoration: 'none', cursor: 'crosshair' }}>
+          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none">
+            <rect width="36" height="36" fill="#eeece8"/>
+            <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#111">BT</text>
+          </svg>
+          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#eeece8' }}>BAD TASTE</span>
+        </Link>
 
-          @media (max-width: 480px) {
-            [data-grid] {
-              grid-template-columns: 1fr !important;
-              gap: 16px !important;
-            }
-          }
-        `}
-      </style>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 2.5rem)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Link
+            to="/video"
+            style={{
+              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
+              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
+              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
+          >
+            VIDEO
+          </Link>
+          <span style={{
+            fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '700',
+            letterSpacing: '0.15em', color: '#eeece8',
+            borderBottom: '1px solid #eeece8', paddingBottom: '1px',
+          }}>
+            {t.photos?.title || 'FOTOS'}
+          </span>
+          <Link
+            to="/contactos"
+            style={{
+              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
+              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
+              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
+          >
+            {t.nav?.contacts || 'CONTACTO'}
+          </Link>
+          <div style={{ width: '1px', height: 'clamp(10px, 1.5vw, 12px)', background: '#eeece8', opacity: 0.15 }} />
+          <LanguageSwitcher />
+        </div>
+      </nav>
 
-      <div style={containerStyle}>
-        <h1 style={titleStyle}>{t.photos?.title || 'FOTOS'}</h1>
-
-        {gallery.length === 0 ? (
-          <div style={emptyStyle}>{t.photos?.empty || 'Nenhuma foto disponível'}</div>
-        ) : (
-          <div style={gridStyle} data-grid>
-            {gallery.map((photo, idx) => (
-              <div
-                key={photo.id}
-                style={cardStyle}
-                onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
-                onMouseLeave={(e) => Object.assign(e.currentTarget.style, { transform: 'scale(1)', opacity: 1 })}
-                onClick={() => openLightbox(idx)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    openLightbox(idx);
-                  }
-                }}
-              >
-                <img src={photo.path} alt={photo.caption || 'Gallery photo'} style={imgStyle} />
-                {photo.caption && <div style={captionStyle}>{photo.caption}</div>}
-              </div>
-            ))}
+      {/* Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '1px',
+        background: '#000',
+        flex: 1,
+      }}>
+        {albums.length === 0 ? (
+          <div
+            onClick={goToGallery}
+            style={{
+              aspectRatio: '16/9', cursor: 'crosshair',
+              background: '#181818', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <span style={{
+              fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', fontWeight: '700',
+              color: '#eeece8', letterSpacing: '0.12em', opacity: 0.3,
+            }}>
+              {(t.photos?.title || 'FOTOS').toUpperCase()}
+            </span>
           </div>
+        ) : (
+          albums.map((photo, i) => (
+            <PhotoAlbumCard
+              key={photo.id}
+              photo={photo}
+              index={i}
+              total={albums.length}
+              onClick={goToGallery}
+            />
+          ))
         )}
       </div>
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && gallery[lightboxIndex] && (
-        <div style={lightboxStyle} onClick={closeLightbox}>
-          <button
-            style={closeButtonStyle}
-            onClick={closeLightbox}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)')}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)')}
-            aria-label="Close lightbox"
-          >
-            ✕
-          </button>
-
-          <button
-            style={{ ...arrowStyle, left: '20px' }}
-            onClick={goToPrevious}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)')}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)')}
-            aria-label="Previous photo"
-          >
-            ‹
-          </button>
-
-          <img
-            src={gallery[lightboxIndex].path}
-            alt={gallery[lightboxIndex].caption || 'Gallery photo'}
-            style={lightboxImgStyle}
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {gallery[lightboxIndex].caption && (
-            <div style={lightboxCaptionStyle} onClick={(e) => e.stopPropagation()}>
-              {gallery[lightboxIndex].caption}
-            </div>
-          )}
-
-          <button
-            style={{ ...arrowStyle, right: '20px', left: 'auto' }}
-            onClick={goToNext}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)')}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)')}
-            aria-label="Next photo"
-          >
-            ›
-          </button>
-
-          {/* Counter */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '40px',
-              right: '40px',
-              color: '#fff',
-              fontSize: '12px',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {lightboxIndex + 1} / {gallery.length}
-          </div>
-        </div>
-      )}
+      <ContactsFooter />
     </div>
   );
 };

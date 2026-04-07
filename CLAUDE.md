@@ -22,12 +22,12 @@ Website de portfólio pessoal com uma experiência visual minimalista e dinâmic
 - Ao voltar da página de detalhe: o segmento correspondente fica brevemente destacado (stroke mais espesso, 1.5s)
 
 ### Filosofia de Design
-- Minimalista: fundo bege claro (`#eeece8`), preto e branco, sem cor decorativa
-- Tipografia **Space Grotesk** em caps, letra fina, espacejamento generoso
-- Segmentos com thumbnail mostram a foto do projeto; ao hover o fill/thumbnail dissolvem-se, revelando o vídeo por baixo
-- Segmentos sem thumbnail ficam bege (`#eeece8`); ao hover ficam transparentes
-- Os vídeos de preview (clip 20s) aparecem em full-screen no fundo ao hover (substituem o slideshow)
-- O slideshow corre continuamente enquanto não há hover; pausa ao hover
+- Minimalista, sem cor decorativa; tipografia **Space Grotesk** em caps, letra fina, espacejamento generoso
+- **Dual-theme**: HomePage/ProjectPage/ContactsPage usam fundo bege (`#eeece8`); VideoPage/PhotosPage/GalleryPage usam fundo dark (`#111`) — estética editorial
+- Cards de vídeo/foto: imagem limpa por defeito, **sem texto visível**; hover revela overlay escuro + info (fade + translateY)
+- Segmentos do anel: thumbnail ao hover dissolve-se revelando vídeo por baixo; segmentos vazios ficam transparentes
+- Vídeos de preview (clip 20s) full-screen no fundo ao hover no anel (substituem slideshow)
+- Slideshow corre continuamente sem hover; pausa ao hover
 
 ## Stack Técnica
 - Frontend: **React + Vite**
@@ -38,7 +38,7 @@ Website de portfólio pessoal com uma experiência visual minimalista e dinâmic
 - Styling: **CSS inline** (sem framework)
 - i18n: **contexto React custom** (sem dependências externas) — ES / CA / EN
 - Dados: **localStorage** para projetos/contactos; **gallery.json** (servidor) para galeria
-- Admin: auth por password via `VITE_ADMIN_PASSWORD`; upload de ficheiros via Multer
+- Admin: auth por password via `VITE_ADMIN_PASSWORD` ou palavra-passe customizada em `localStorage`; upload de ficheiros via Multer
 - Upload: **Multer** para vídeos (`/videos/full/`) e fotos (`/images/`)
 
 ## Estrutura de Ficheiros
@@ -55,8 +55,8 @@ src/
   admin/
     adminData.js            — getProjects/saveProjects, getContacts/saveContacts (localStorage)
                               slugify()
-    adminAuth.js            — login/logout/isAuthenticated (sessionStorage)
-    galleryData.js          — getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto (API)
+    adminAuth.js            — login/logout/isAuthenticated/changePassword (sessionStorage + localStorage)
+    galleryData.js          — getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto (API)
   data/projects.js          — array de projetos estático (fallback inicial)
   i18n/
     translations.js         — traduções: UI + títulos/descrições/tags (ES/CA/EN) + fotos
@@ -65,15 +65,17 @@ src/
     RotatingWheel.jsx       — anel SVG rotativo + hover/velocidade
     VideoPreview.jsx        — caixa de info (título, descrição, tags, contador)
     BackgroundSlideshow.jsx — slideshow de fundo com crossfade
+    ContactsFooter.jsx      — footer partilhado (#111, brand + nav + contactos) usado em HomePage/VideoPage/PhotosPage/GalleryPage
   pages/
     HomePage.jsx            — homepage: navbar + anel + slideshow + footer
     ProjectPage.jsx         — página de detalhe /projeto/:slug
     ContactsPage.jsx        — página /contactos (fundo preto, Esc volta)
-    VideoPage.jsx           — página /video: grid 2 colunas com todos os projetos
-    PhotosPage.jsx          — página /fotos: galeria com lightbox (setas, Esc, counter)
+    VideoPage.jsx           — página /video: grid 2 colunas, texto centrado nos cards, back button, footer
+    PhotosPage.jsx          — página /fotos: card de capa com nome centrado (hover) → /fotos/galeria, back button, footer
+    GalleryPage.jsx         — página /fotos/galeria: grid completo de fotos + lightbox, back button, footer
     admin/
       AdminLogin.jsx        — login (/admin)
-      AdminDashboard.jsx    — painel (/admin/dashboard): projetos + reordenação + contactos + galeria
+      AdminDashboard.jsx    — painel (/admin/dashboard): projetos + galeria + segurança (pw) + contactos
       AdminProjectEditor.jsx — editor (/admin/projects/:slug): upload de thumbnail, videoFull, videoPreview
   styles/
     global.css              — reset + variáveis de cor
@@ -111,31 +113,37 @@ vite.config.js              — proxy /api → localhost:3001
 - Rota `/api/upload/photo` — `POST` (Multer) → salva em `public/images/` → retorna `{path, filename}`
 - Rota `/api/upload/video` — `POST` (Multer) → salva em `public/videos/full/` → retorna `{path, filename}`
 - Rota `/api/gallery` — `GET` lista fotos | `POST` adiciona foto
-- Rota `/api/gallery/:id` — `PUT` edita caption/order | `DELETE` apaga + remove ficheiro
+- Rota `/api/gallery/:id` — `PUT` edita caption/order/isCover | `DELETE` apaga + remove ficheiro
+  - `isCover: true` limpa automaticamente `isCover` de todas as outras fotos (só uma capa de cada vez)
 - Servidor roda na **porta 3001** (paralelo ao Vite 5173)
 - CORS configurado para `localhost:5173` e `localhost:3000`
 - Vite proxy: `/api` → `localhost:3001`
 
 ## Galeria de Fotos
-- Dados persistidos em `server/data/gallery.json`: `[{id, path, caption, order, createdAt}, ...]`
-- Cada foto tem `id` (UUID), `path` (ex: `/images/1234-foto.jpg`), `caption`, `order` (para reordenação)
+- Dados persistidos em `server/data/gallery.json`: `[{id, path, caption, order, isCover, createdAt}, ...]`
+- Cada foto tem `id` (UUID), `path` (ex: `/images/1234-foto.jpg`), `caption`, `order`, `isCover` (boolean)
 - Upload: seleciona ficheiro no admin → `POST /api/upload/photo` → retorna path → `POST /api/gallery` adiciona à galeria
-- Página `/fotos` — grid responsivo 3 col. (2 tablet, 1 mobile) → lightbox ao clicar
-- Lightbox: overlay escuro, setas (◂ ›), Esc fecha, counter `01/N`, caption exibida
+- **Foto de capa** (`isCover: true`): a foto marcada como capa aparece na página `/fotos` como card de entrada
+  - O `caption` da foto capa é o nome visível no card (centrado, em hover)
+  - No admin: botão `☆ CAPA / ★ CAPA` por card; `setCoverPhoto(id)` chama PUT com `{isCover: true}`
+- Página `/fotos` — card de capa (estilo VideoPage: 16/9, texto centrado, overlay escuro); clicar → `/fotos/galeria`
+- Página `/fotos/galeria` — grid completo de fotos (auto-fill, 3 col → 2 tablet → 1 mobile) + lightbox
+- Lightbox: overlay escuro, setas (◂ ›), Esc fecha (volta ao grid), counter `01/N`, caption exibida
 - Apagar foto: `DELETE /api/gallery/:id` remove do JSON + ficheiro do disco
 
 ## Painel de Admin
-- Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`)
-- Rota `/admin/dashboard` — **ORDEM: Projetos → Galeria → Contactos**
+- Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`, ou palavra-passe customizada em `localStorage(bt_admin_custom_password)`)
+- Rota `/admin/dashboard` — **ORDEM: Projetos → Galeria → Segurança → Contactos**
   - Lista de projetos com reordenação (▲▼), editar, apagar
-  - **Gestão de galeria** (ANTES de contactos): grid responsivo de fotos com cards interativas
-  - Edição de contactos (email, Instagram, telemóvel)
+  - **Gestão de galeria**: grid responsivo, botão `☆/★ CAPA` por foto, caption editável, apagar com confirmação, botão "VER GALERIA"
+  - **Segurança**: formulário para alterar palavra-passe (verifica atual, mínimo 6 chars, confirmação)
+  - Edição de contactos (email, Instagram handle, Instagram URL, telemóvel)
 - Rota `/admin/projects/novo` — criar novo projeto
 - Rota `/admin/projects/:slug` — editar projeto existente
 - **Upload direto**: botões de file input em AdminProjectEditor para thumbnail, videoFull, videoPreview → com loading state
 - Auth: sessionStorage (`bt_admin_auth`); perde-se ao fechar o tab
+- Palavra-passe customizada: guardada em `localStorage(bt_admin_custom_password)`; sobrepõe-se ao `.env`
 - Design: fundo `#111`, tema escuro, mesma tipografia Space Grotesk
-- **Galeria no Admin**: cards com imagem, nome/caption editável ao clicar, hover com efeito visual (background, escala), botão "VER GALERIA" para link rápido
 
 ## Dados dos Projetos (`src/data/projects.js`)
 Cada projeto tem:
@@ -168,8 +176,9 @@ Cada projeto tem:
 - **Sem breakpoints abruptos**: layout flui naturalmente entre mobile/tablet/desktop
 - **Aplicado a todas as páginas**:
   - HomePage: navbar (logo, gaps, altura), footer grid (`auto-fit`)
-  - VideoPage: navbar, grid 2 col (desktop) → 1 col (mobile via media query), video cards
-  - PhotosPage: grid dinamicamente responsivo, lightbox com padding/fonts escaláveis
+  - VideoPage: navbar, grid 2 col (desktop) → 1 col (mobile via media query), cards responsivos
+  - PhotosPage: card de capa responsivo, navbar responsiva
+  - GalleryPage: grid auto-fill → 2 col (tablet) → 1 col (mobile), lightbox responsivo
   - ProjectPage: back button, vídeo, conteúdo, títulos
   - ContactsPage: header flexível, layout 2 col → 1 col em mobile (media query), formulário
   - AdminDashboard: tabela com scrolling, inputs, buttons, espaçamento
@@ -240,7 +249,7 @@ Cada projeto tem:
 - [x] Sistema i18n: Espanhol (padrão), Catalão e Inglês — seletor ES|CA|EN na navbar
 - [x] Traduções completas: UI (navbar, footer, contactos, erros) + títulos/descrições/tags de todos os projetos
 - [x] Língua guardada em `localStorage` (persiste entre sessões)
-- [x] Página `/video` criada (`VideoPage.jsx`): grid 2 colunas, todos os projetos do anel, thumbnail → vídeo ao hover, contador `01/N`, tags, clique → `/projeto/:slug`; último projeto ocupa largura total se ímpar; Esc volta à homepage
+- [x] Página `/video` criada (`VideoPage.jsx`): grid 2 colunas dark (`#111`), todos os projetos; thumbnail visível por defeito (sem texto); hover → overlay escuro + título/tags/contador animados (fade+translateY); vídeo reproduz ao hover; clique → `/projeto/:slug`; último projeto ocupa largura total se ímpar; Esc volta à homepage
 - [x] Navbar VIDEO atualizado de `#` para `/video`; rota `/video` registada em `main.jsx`
 - [x] Página `/contactos` redesenhada: layout 2 colunas (info + formulário), separadas por linha vertical fina; formulário com inputs `border-bottom` only, labels caps, botão rectangular sem bordas arredondadas; estado "enviado" inverte cores por 3s; traduções do formulário adicionadas a todas as línguas (`t.contacts.form`)
 - [x] Painel de admin criado (`/admin`, `/admin/dashboard`, `/admin/projects/:slug`)
@@ -252,22 +261,28 @@ Cada projeto tem:
 - [x] Backend Express.js na porta 3001 (paralelo ao Vite 5173)
 - [x] Multer: upload de fotos (`/images/`) e vídeos (`/videos/full/`)
 - [x] API gallery CRUD: GET/POST/PUT/DELETE `/api/gallery` com persistência em JSON
-- [x] Camada `galleryData.js`: getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto
+- [x] Camada `galleryData.js`: getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto
 - [x] Vite proxy: `/api` → `localhost:3001`
 - [x] Scripts npm: `dev` (Vite+Express), `dev:frontend`, `server`
-- [x] Página `/fotos` (PhotosPage.jsx): grid responsivo 3 col (2 tablet, 1 mobile)
-- [x] Lightbox na galeria: overlay, setas (◂ ›), Esc fecha, counter `01/N`, caption
-- [x] AdminDashboard com secção GALERIA: upload de fotos, edição de caption, reordenação, apagar com confirmação
+- [x] Página `/fotos` (PhotosPage.jsx): dark theme `#111`; card de capa 16/9 com hover overlay animado (nome + "VER GALERIA"); zoom subtil na imagem ao hover; clicar → `/fotos/galeria`
+- [x] Página `/fotos/galeria` (GalleryPage.jsx): dark theme `#111`; grid 2 col quadrado edge-to-edge (1px gap preto); hover → overlay + caption + contador animados; lightbox minimalista (counter top-left, `✕` top-right, `‹ ›` laterais, caption bottom-center)
+- [x] Foto de capa: campo `isCover` em `gallery.json`; botão `☆/★ CAPA` no admin; só uma capa de cada vez
+- [x] Caption da foto capa = nome visível no card de entrada da página `/fotos`
+- [x] AdminDashboard com secção GALERIA: upload de fotos, edição de caption/nome, botão ☆/★ CAPA, apagar com confirmação
 - [x] AdminProjectEditor com upload direto: thumbnail, videoFull, videoPreview (com loading state)
 - [x] Traduções para galeria (ES/CA/EN): `t.photos.title`, `t.photos.empty`
 - [x] NavBar: link FOTOS atualizado de `#` para `/fotos`
-- [x] Galeria reorganizada no admin: agora ACIMA de contactos
-- [x] Cards de galeria no admin com nome/caption, hover effects (background, escala, imagem mais escura)
+- [x] Galeria reorganizada no admin: PROJETOS → GALERIA → SEGURANÇA → CONTACTOS
 - [x] Botão "VER GALERIA" no admin dashboard para acesso rápido
+- [x] Footer (`ContactsFooter.jsx`) partilhado: HomePage, VideoPage, PhotosPage, GalleryPage
+- [x] Back button (← VOLVER) em VideoPage, PhotosPage, GalleryPage — com fade suave
+- [x] VideoPage / PhotosPage / GalleryPage: redesign visual completo — fundo `#111`, navbar dark, cards sem texto por defeito; info surge **apenas ao hover** (overlay fade + translateY); BT logo invertido (beige sobre preto); estética editorial editorial dark inspirada em franciscotaboas.myportfolio.com
+- [x] Admin: secção **SEGURANÇA** — alterar palavra-passe (verifica atual, mín. 6 chars, confirmação)
+- [x] Palavra-passe customizada guardada em `localStorage(bt_admin_custom_password)`, sobrepõe-se ao `.env`
 - [x] Responsividade completa em **todas as páginas**: `clamp()` para fluid typography/spacing
   - [x] HomePage: navbar, language switcher, footer responsivos
   - [x] VideoPage: navbar, grid 2 col → 1 col mobile, cards responsivos
-  - [x] PhotosPage: grid dinâmico, lightbox responsivo
+  - [x] PhotosPage / GalleryPage: card capa responsivo, grid dinâmico, lightbox responsivo
   - [x] ProjectPage: back button, vídeo, conteúdo responsivos
   - [x] ContactsPage: header, layout 2 col → 1 col mobile, formulário responsivo
   - [x] AdminDashboard: tabela, inputs, buttons, espaçamento responsivos

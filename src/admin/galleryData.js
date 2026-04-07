@@ -27,8 +27,12 @@ export const addGalleryPhoto = async (photoData) => {
   }
 };
 
+export const setCoverPhoto = async (id) => {
+  return updateGalleryPhoto(id, { isCover: true });
+};
+
 export const updateGalleryPhoto = async (id, updates) => {
-  // updates = { caption?, order? }
+  // updates = { caption?, order?, isCover? }
   try {
     const res = await fetch(`/api/gallery/${id}`, {
       method: 'PUT',

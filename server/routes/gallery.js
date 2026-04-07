@@ -63,10 +63,10 @@ router.post('/', (req, res) => {
   res.status(201).json(newPhoto);
 });
 
-// PUT - Update photo (caption, order)
+// PUT - Update photo (caption, order, isCover)
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { caption, order } = req.body;
+  const { caption, order, isCover } = req.body;
 
   const gallery = loadGallery();
   const photoIndex = gallery.findIndex((p) => p.id === id);
@@ -77,6 +77,13 @@ router.put('/:id', (req, res) => {
 
   if (caption !== undefined) gallery[photoIndex].caption = caption;
   if (order !== undefined) gallery[photoIndex].order = order;
+  if (isCover !== undefined) {
+    // Only one cover at a time — clear all others first
+    if (isCover) {
+      gallery.forEach((p) => { p.isCover = false; });
+    }
+    gallery[photoIndex].isCover = isCover;
+  }
 
   saveGallery(gallery);
 
