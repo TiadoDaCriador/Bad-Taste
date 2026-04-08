@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext';
-import { getGallery } from '../admin/galleryData';
+import { getProjects } from '../admin/adminData';
 import ContactsFooter from '../components/ContactsFooter';
 
 function LanguageSwitcher() {
@@ -29,36 +29,45 @@ function LanguageSwitcher() {
   )
 }
 
-function PhotoAlbumCard({ photo, index, total, onClick }) {
+function PhotoCard({ project, index, total, t, isLast, isOdd }) {
+  const navigate = useNavigate()
   const [hovered, setHovered] = useState(false)
-  const name = photo.caption || 'FOTOS'
+
+  const localized = t.projects?.[project.slug] || {}
+  const title = localized.title || project.title
+  const tags = localized.tags || project.tags || []
+
   const padded = String(index + 1).padStart(2, '0')
   const paddedTotal = String(total).padStart(2, '0')
 
   return (
     <div
-      onClick={onClick}
+      onClick={() => navigate(`/projeto/${project.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
-        aspectRatio: '16/9',
+        aspectRatio: isLast && isOdd ? '32/9' : '16/9',
         overflow: 'hidden',
         cursor: 'crosshair',
         background: '#0a0a0a',
+        gridColumn: isLast && isOdd ? 'span 2' : 'auto',
       }}
     >
-      {/* Image */}
-      <img
-        src={photo.path}
-        alt={name}
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%', objectFit: 'cover',
-          transition: 'transform 0.8s ease',
-          transform: hovered ? 'scale(1.04)' : 'scale(1)',
-        }}
-      />
+      {project.thumbnail ? (
+        <img
+          src={project.thumbnail}
+          alt={title}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%', objectFit: 'cover',
+            transition: 'transform 0.8s ease',
+            transform: hovered ? 'scale(1.04)' : 'scale(1)',
+          }}
+        />
+      ) : (
+        <div style={{ position: 'absolute', inset: 0, background: '#181818' }} />
+      )}
 
       {/* Hover overlay */}
       <div style={{
@@ -75,7 +84,7 @@ function PhotoAlbumCard({ photo, index, total, onClick }) {
         alignItems: 'center', justifyContent: 'center',
         textAlign: 'center', pointerEvents: 'none',
         padding: 'clamp(1.5rem, 4vw, 3rem)',
-        gap: 'clamp(0.4rem, 1vw, 0.6rem)',
+        gap: 'clamp(0.5rem, 1.2vw, 0.8rem)',
         opacity: hovered ? 1 : 0,
         transform: hovered ? 'translateY(0)' : 'translateY(8px)',
         transition: 'opacity 0.4s ease, transform 0.4s ease',
@@ -92,78 +101,66 @@ function PhotoAlbumCard({ photo, index, total, onClick }) {
           fontWeight: '700', color: '#eeece8',
           letterSpacing: '0.1em', margin: 0, lineHeight: 1.05,
         }}>
-          {name.toUpperCase()}
+          {title.toUpperCase()}
         </h2>
-        <p style={{
-          fontSize: 'clamp(7px, 0.9vw, 9px)',
-          color: '#eeece8', opacity: 0.5,
-          letterSpacing: '0.25em', fontWeight: '500', margin: 0,
-        }}>
-          VER GALERIA
-        </p>
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.3rem' }}>
+            {tags.slice(0, 3).map(tag => (
+              <span key={tag} style={{
+                fontSize: 'clamp(7px, 0.9vw, 9px)',
+                color: '#eeece8', opacity: 0.6,
+                letterSpacing: '0.2em', fontWeight: '500',
+              }}>
+                {tag.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-const PhotosPage = () => {
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [albums, setAlbums] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
+export default function PhotosPage() {
+  const navigate = useNavigate()
+  const { t } = useLanguage()
+  const [projects, setProjects] = useState([])
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const fetchGallery = async () => {
-      setLoading(true);
-      const data = await getGallery();
-      const sorted = data.sort((a, b) => (a.order || 0) - (b.order || 0));
-      // Use cover photo as the album entry; fallback to first photo
-      const cover = sorted.find(p => p.isCover) || sorted[0] || null;
-      setAlbums(cover ? [cover] : []);
-      setLoading(false);
-    };
-    fetchGallery();
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
+    getProjects().then(setProjects)
+    requestAnimationFrame(() => setVisible(true))
+  }, [])
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') goBack();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setVisible(false)
+        setTimeout(() => navigate('/'), 250)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
 
-  const goBack = () => {
-    setVisible(false);
-    setTimeout(() => navigate('/'), 250);
-  };
-
-  const goToGallery = () => {
-    setVisible(false);
-    setTimeout(() => navigate('/fotos/galeria'), 250);
-  };
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
-        <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#eeece8', opacity: 0.3 }}>—</span>
-      </div>
-    );
-  }
+  const isOdd = projects.length % 2 !== 0
 
   return (
     <div style={{
       minHeight: '100vh',
       background: '#111',
-      fontFamily: 'Space Grotesk, sans-serif',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
+      fontFamily: 'Space Grotesk, sans-serif',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      {/* Navbar */}
+      <style>{`
+        @media (max-width: 768px) {
+          [data-photos-grid] { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
       <nav style={{
         position: 'sticky', top: 0,
         height: 'clamp(50px, 10vw, 60px)',
@@ -174,7 +171,7 @@ const PhotosPage = () => {
         gap: 'clamp(1rem, 2vw, 1.5rem)', flexWrap: 'wrap', flexShrink: 0,
       }}>
         <button
-          onClick={goBack}
+          onClick={() => { setVisible(false); setTimeout(() => navigate('/'), 250); }}
           style={{
             background: 'none', border: 'none', cursor: 'crosshair',
             fontSize: 'clamp(10px, 1.2vw, 11px)', fontFamily: 'inherit',
@@ -192,7 +189,9 @@ const PhotosPage = () => {
             <rect width="36" height="36" fill="#eeece8"/>
             <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#111">BT</text>
           </svg>
-          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#eeece8' }}>BAD TASTE</span>
+          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#eeece8' }}>
+            BAD TASTE
+          </span>
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 2.5rem)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -232,46 +231,27 @@ const PhotosPage = () => {
         </div>
       </nav>
 
-      {/* Grid */}
-      <div style={{
+      <div data-photos-grid style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '1px',
         background: '#000',
         flex: 1,
       }}>
-        {albums.length === 0 ? (
-          <div
-            onClick={goToGallery}
-            style={{
-              aspectRatio: '16/9', cursor: 'crosshair',
-              background: '#181818', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <span style={{
-              fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', fontWeight: '700',
-              color: '#eeece8', letterSpacing: '0.12em', opacity: 0.3,
-            }}>
-              {(t.photos?.title || 'FOTOS').toUpperCase()}
-            </span>
-          </div>
-        ) : (
-          albums.map((photo, i) => (
-            <PhotoAlbumCard
-              key={photo.id}
-              photo={photo}
-              index={i}
-              total={albums.length}
-              onClick={goToGallery}
-            />
-          ))
-        )}
+        {projects.map((project, i) => (
+          <PhotoCard
+            key={project.slug}
+            project={project}
+            index={i}
+            total={projects.length}
+            t={t}
+            isLast={i === projects.length - 1}
+            isOdd={isOdd}
+          />
+        ))}
       </div>
 
       <ContactsFooter />
     </div>
-  );
-};
-
-export default PhotosPage;
+  )
+}

@@ -1,90 +1,59 @@
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import express from 'express'
+import multer from 'multer'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-const router = express.Router();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const router = express.Router()
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Video upload storage
 const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../public/videos/full');
-    cb(null, uploadPath);
+  destination: (_req, _file, cb) => cb(null, path.join(__dirname, '../../public/videos/full')),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    cb(null, `${Date.now()}-${path.basename(file.originalname, ext).replace(/\s/g, '_')}${ext}`)
   },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext);
-    cb(null, `${timestamp}-${name}${ext}`);
-  },
-});
+})
 
-// Photo upload storage
 const photoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../public/images');
-    cb(null, uploadPath);
+  destination: (_req, _file, cb) => cb(null, path.join(__dirname, '../../public/images')),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    cb(null, `${Date.now()}-${path.basename(file.originalname, ext).replace(/\s/g, '_')}${ext}`)
   },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext);
-    cb(null, `${timestamp}-${name}${ext}`);
-  },
-});
+})
 
-// Multer instances
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']
+
 const uploadVideo = multer({
   storage: videoStorage,
-  fileFilter: (req, file, cb) => {
-    const allowedMimes = ['video/mp4', 'video/webm', 'video/quicktime'];
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid video format. Allowed: mp4, webm, mov'));
-    }
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_VIDEO_TYPES.includes(file.mimetype)) cb(null, true)
+    else cb(new Error('Formato inválido. Permitido: mp4, webm, mov, avi, mkv'))
   },
-});
+})
 
 const uploadPhoto = multer({
   storage: photoStorage,
-  fileFilter: (req, file, cb) => {
-    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid image format. Allowed: jpg, png, webp, gif'));
-    }
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true)
+    else cb(new Error('Formato inválido. Permitido: jpg, png, webp, gif'))
   },
-});
+})
 
-// Routes
 router.post('/video', uploadVideo.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  const filePath = `/videos/full/${req.file.filename}`;
-  res.json({ success: true, path: filePath, filename: req.file.filename });
-});
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+  res.json({ success: true, path: `/videos/full/${req.file.filename}`, filename: req.file.filename })
+})
 
 router.post('/photo', uploadPhoto.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  const filePath = `/images/${req.file.filename}`;
-  res.json({ success: true, path: filePath, filename: req.file.filename });
-});
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+  res.json({ success: true, path: `/images/${req.file.filename}`, filename: req.file.filename })
+})
 
-// Error handler for multer
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    return res.status(400).json({ error: error.message });
-  }
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-  next();
-});
+router.use((error, _req, res, _next) => {
+  res.status(400).json({ error: error.message })
+})
 
-export default router;
+export default router

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { getProjects } from '../admin/adminData'
-const projects = getProjects()
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
 import ContactsFooter from '../components/ContactsFooter'
 
@@ -49,9 +48,7 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
 
   const handleMouseLeave = () => {
     setHovered(false)
-    if (videoRef.current) {
-      videoRef.current.pause()
-    }
+    if (videoRef.current) videoRef.current.pause()
   }
 
   const padded = String(index + 1).padStart(2, '0')
@@ -71,7 +68,6 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         gridColumn: isLast && isOdd ? 'span 2' : 'auto',
       }}
     >
-      {/* Thumbnail */}
       {project.thumbnail && (
         <img
           src={project.thumbnail}
@@ -85,7 +81,6 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         />
       )}
 
-      {/* No thumbnail fallback */}
       {!project.thumbnail && (
         <div style={{
           position: 'absolute', inset: 0,
@@ -95,7 +90,6 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         }} />
       )}
 
-      {/* Video */}
       {project.videoFull && (
         <video
           ref={videoRef}
@@ -113,7 +107,6 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         />
       )}
 
-      {/* Hover overlay */}
       <div style={{
         position: 'absolute', inset: 0,
         background: hovered ? 'rgba(0,0,0,0.52)' : 'rgba(0,0,0,0)',
@@ -121,7 +114,6 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
         pointerEvents: 'none',
       }} />
 
-      {/* Info — only on hover */}
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column',
@@ -168,10 +160,11 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
 export default function VideoPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
+  const [projects, setProjects] = useState([])
   const [visible, setVisible] = useState(false)
-  const isOdd = projects.length % 2 !== 0
 
   useEffect(() => {
+    getProjects().then(setProjects)
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
@@ -185,6 +178,8 @@ export default function VideoPage() {
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
+
+  const isOdd = projects.length % 2 !== 0
 
   return (
     <div style={{
@@ -202,7 +197,6 @@ export default function VideoPage() {
         }
       `}</style>
 
-      {/* Navbar */}
       <nav style={{
         position: 'sticky', top: 0,
         height: 'clamp(50px, 10vw, 60px)',
@@ -273,7 +267,6 @@ export default function VideoPage() {
         </div>
       </nav>
 
-      {/* Grid */}
       <div data-video-grid style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',

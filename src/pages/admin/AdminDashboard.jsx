@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAuthenticated, logout, changePassword } from '../../admin/adminAuth'
 import { getProjects, saveProjects, getContacts, saveContacts } from '../../admin/adminData'
-import { getGallery, uploadPhoto, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto } from '../../admin/galleryData'
+import { getPhotoProjects, createPhotoProject, savePhotoProjects, deletePhotoProject, slugify } from '../../admin/photoProjectsData'
+import { uploadPhoto } from '../../admin/galleryData'
 
 const mono = { fontFamily: 'Space Grotesk, sans-serif' }
 
@@ -166,8 +167,8 @@ export default function AdminDashboard() {
       navigate('/admin')
       return
     }
-    setProjects(getProjects())
-    setContacts(getContacts())
+    getProjects().then(setProjects)
+    getContacts().then(setContacts)
     loadGallery()
   }, [])
 
@@ -181,16 +182,16 @@ export default function AdminDashboard() {
     navigate('/admin')
   }
 
-  const moveProject = (index, dir) => {
+  const moveProject = async (index, dir) => {
     const updated = [...projects]
     const swap = dir === 'up' ? index - 1 : index + 1
     if (swap < 0 || swap >= updated.length) return
     ;[updated[index], updated[swap]] = [updated[swap], updated[index]]
     setProjects(updated)
-    saveProjects(updated)
+    await saveProjects(updated)
   }
 
-  const deleteProject = (slug) => {
+  const deleteProject = async (slug) => {
     if (deleteConfirm !== slug) {
       setDeleteConfirm(slug)
       setTimeout(() => setDeleteConfirm(null), 3000)
@@ -198,13 +199,13 @@ export default function AdminDashboard() {
     }
     const updated = projects.filter(p => p.slug !== slug)
     setProjects(updated)
-    saveProjects(updated)
+    await saveProjects(updated)
     setDeleteConfirm(null)
   }
 
-  const handleContactsSave = (e) => {
+  const handleContactsSave = async (e) => {
     e.preventDefault()
-    saveContacts(contacts)
+    await saveContacts(contacts)
     setContactsSaved(true)
     setTimeout(() => setContactsSaved(false), 2000)
   }

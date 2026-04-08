@@ -1,29 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getProjects } from '../admin/adminData'
-const projects = getProjects()
 import { useLanguage } from '../i18n/LanguageContext'
 
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const project = projects.find(p => p.slug === slug)
+  const [projects, setProjects] = useState([])
   const [visible, setVisible] = useState(false)
   const { t } = useLanguage()
 
-  const localized = t.projects[slug] || {}
-  const title = localized.title || project?.title || ''
-  const description = localized.description || project?.description || ''
-  const tags = localized.tags || project?.tags || []
-
   useEffect(() => {
+    getProjects().then(setProjects)
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') goBack()
-    }
+    const handleKey = (e) => { if (e.key === 'Escape') goBack() }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
@@ -33,7 +26,13 @@ export default function ProjectPage() {
     setTimeout(() => navigate('/', { state: { fromSlug: slug } }), 250)
   }
 
-  if (!project) {
+  const project = projects.find(p => p.slug === slug)
+  const localized = t.projects[slug] || {}
+  const title = localized.title || project?.title || ''
+  const description = localized.description || project?.description || ''
+  const tags = localized.tags || project?.tags || []
+
+  if (projects.length > 0 && !project) {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
         <p style={{ letterSpacing: '0.1em', color: '#888', fontSize: '12px' }}>{t.project.notFound}</p>
@@ -54,7 +53,6 @@ export default function ProjectPage() {
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
     }}>
-      {/* Back button */}
       <button
         onClick={goBack}
         style={{
@@ -75,8 +73,7 @@ export default function ProjectPage() {
         {t.project.back}
       </button>
 
-      {/* Video full-width */}
-      {project.videoFull ? (
+      {project?.videoFull ? (
         <video
           src={project.videoFull}
           autoPlay
@@ -107,7 +104,6 @@ export default function ProjectPage() {
         </div>
       )}
 
-      {/* Content */}
       <div style={{ padding: 'clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 6rem)', maxWidth: '900px' }}>
         <h1 style={{
           fontSize: 'clamp(2rem, 5vw, 5rem)',

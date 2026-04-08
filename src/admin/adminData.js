@@ -1,8 +1,5 @@
 import { projects as defaultProjects } from '../data/projects'
 
-const PROJECTS_KEY = 'bt_admin_projects'
-const CONTACTS_KEY = 'bt_admin_contacts'
-
 export const defaultContacts = {
   email: 'hello@badtaste.pt',
   instagram: '@badtaste',
@@ -10,28 +7,44 @@ export const defaultContacts = {
   phone: '+351 900 000 000',
 }
 
-export function getProjects() {
+export async function getProjects() {
   try {
-    const stored = localStorage.getItem(PROJECTS_KEY)
-    if (stored) return JSON.parse(stored)
-  } catch {}
-  return defaultProjects
+    const res = await fetch('/api/projects')
+    if (!res.ok) throw new Error(`Failed: ${res.status}`)
+    return await res.json()
+  } catch {
+    return defaultProjects
+  }
 }
 
-export function saveProjects(projects) {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects))
+export async function saveProjects(projects) {
+  const res = await fetch('/api/projects/batch', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projects }),
+  })
+  if (!res.ok) throw new Error(`saveProjects failed: ${res.status}`)
+  return res.json()
 }
 
-export function getContacts() {
+export async function getContacts() {
   try {
-    const stored = localStorage.getItem(CONTACTS_KEY)
-    if (stored) return JSON.parse(stored)
-  } catch {}
-  return defaultContacts
+    const res = await fetch('/api/contacts')
+    if (!res.ok) throw new Error(`Failed: ${res.status}`)
+    return await res.json()
+  } catch {
+    return defaultContacts
+  }
 }
 
-export function saveContacts(contacts) {
-  localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts))
+export async function saveContacts(contacts) {
+  const res = await fetch('/api/contacts', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(contacts),
+  })
+  if (!res.ok) throw new Error(`saveContacts failed: ${res.status}`)
+  return res.json()
 }
 
 export function slugify(text) {

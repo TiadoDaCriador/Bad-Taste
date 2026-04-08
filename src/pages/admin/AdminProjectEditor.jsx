@@ -124,15 +124,17 @@ export default function AdminProjectEditor() {
   useEffect(() => {
     if (!isAuthenticated()) { navigate('/admin'); return }
     if (!isNew) {
-      const projects = getProjects()
-      const found = projects.find(p => p.slug === slug)
-      if (!found) { navigate('/admin/dashboard'); return }
-      setForm({
-        ...found,
-        tags: (found.tags || []).join(', '),
-        videoPreview: found.videoPreview || '',
-      })
-      setSlugManual(true)
+      (async () => {
+        const projects = await getProjects()
+        const found = projects.find(p => p.slug === slug)
+        if (!found) { navigate('/admin/dashboard'); return }
+        setForm({
+          ...found,
+          tags: (found.tags || []).join(', '),
+          videoPreview: found.videoPreview || '',
+        })
+        setSlugManual(true)
+      })()
     }
   }, [slug])
 
@@ -170,14 +172,14 @@ export default function AdminProjectEditor() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
     if (!form.title.trim()) { setError('O título é obrigatório.'); return }
     if (!form.slug.trim()) { setError('O slug é obrigatório.'); return }
 
-    const projects = getProjects()
+    const projects = await getProjects()
     const tagsArray = form.tags
       .split(',')
       .map(t => t.trim())
@@ -206,7 +208,7 @@ export default function AdminProjectEditor() {
       updated = projects.map(p => p.slug === slug ? project : p)
     }
 
-    saveProjects(updated)
+    await saveProjects(updated)
     navigate('/admin/dashboard')
   }
 

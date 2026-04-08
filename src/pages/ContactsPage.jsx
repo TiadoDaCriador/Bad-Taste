@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '../i18n/LanguageContext'
-import { getContacts } from '../admin/adminData'
+import { getContacts, defaultContacts } from '../admin/adminData'
 
 const inputStyle = {
   width: '100%',
@@ -25,12 +25,14 @@ export default function ContactsPage() {
   const { t } = useLanguage()
   const f = t.contacts.form
 
+  const [contacts, setContacts] = useState(defaultContacts)
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [sent, setSent] = useState(false)
   const [focused, setFocused] = useState(null)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
+    getContacts().then(setContacts)
   }, [])
 
   const handleBack = () => {
@@ -54,11 +56,10 @@ export default function ContactsPage() {
     }, 3000)
   }
 
-  const ci = getContacts()
-  const contacts = [
-    { label: t.contacts.email, value: ci.email, href: `mailto:${ci.email}` },
-    { label: t.contacts.instagram, value: ci.instagram, href: ci.instagramUrl },
-    { label: t.contacts.phone, value: ci.phone, href: `tel:${ci.phone.replace(/\s/g, '')}` },
+  const contactItems = [
+    { label: t.contacts.email, value: contacts.email, href: `mailto:${contacts.email}` },
+    { label: t.contacts.instagram, value: contacts.instagram, href: contacts.instagramUrl },
+    { label: t.contacts.phone, value: contacts.phone, href: `tel:${contacts.phone.replace(/\s/g, '')}` },
   ]
 
   return (
@@ -83,20 +84,13 @@ export default function ContactsPage() {
               gap: 2rem !important;
               padding: 2rem 1.75rem !important;
             }
-            [data-divider] {
-              display: none !important;
-            }
-            [data-col-left] {
-              padding-right: 0 !important;
-            }
-            [data-col-right] {
-              padding-left: 0 !important;
-            }
+            [data-divider] { display: none !important; }
+            [data-col-left] { padding-right: 0 !important; }
+            [data-col-right] { padding-left: 0 !important; }
           }
         `}
       </style>
 
-      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -110,14 +104,8 @@ export default function ContactsPage() {
         <button
           onClick={handleBack}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'clamp(6px, 1.5vw, 10px)',
-            background: 'none',
-            border: 'none',
-            color: '#eeece8',
-            cursor: 'crosshair',
-            padding: 0,
+            display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)',
+            background: 'none', border: 'none', color: '#eeece8', cursor: 'crosshair', padding: 0,
           }}
         >
           <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -131,15 +119,9 @@ export default function ContactsPage() {
           onClick={handleBack}
           aria-label={t.contacts.backAriaLabel}
           style={{
-            fontSize: 'clamp(9px, 1.2vw, 10px)',
-            fontWeight: '600',
-            letterSpacing: '0.2em',
-            color: '#eeece8',
-            opacity: 0.45,
-            background: 'none',
-            border: 'none',
-            cursor: 'crosshair',
-            transition: 'opacity 0.2s',
+            fontSize: 'clamp(9px, 1.2vw, 10px)', fontWeight: '600', letterSpacing: '0.2em',
+            color: '#eeece8', opacity: 0.45, background: 'none', border: 'none',
+            cursor: 'crosshair', transition: 'opacity 0.2s',
           }}
           onMouseEnter={e => e.currentTarget.style.opacity = '1'}
           onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
@@ -148,7 +130,6 @@ export default function ContactsPage() {
         </button>
       </div>
 
-      {/* Content */}
       <div data-contacts-grid style={{
         flex: 1,
         display: 'grid',
@@ -159,33 +140,24 @@ export default function ContactsPage() {
         width: '100%',
         margin: '0 auto',
       }}>
-        {/* Left — contact info */}
         <div data-col-left style={{ paddingRight: 'clamp(2rem, 3vw, 4rem)' }}>
           <p style={{
-            fontSize: 'clamp(8px, 1.2vw, 9px)',
-            fontWeight: '700',
-            letterSpacing: '0.25em',
-            opacity: 0.35,
-            marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
+            fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.25em',
+            opacity: 0.35, marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
           }}>{t.contacts.heading}</p>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {contacts.map(({ label, value, href }) => (
+            {contactItems.map(({ label, value, href }) => (
               <a
                 key={label}
                 href={href}
                 target={href.startsWith('http') ? '_blank' : undefined}
                 rel={href.startsWith('http') ? 'noreferrer' : undefined}
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'clamp(0.2rem, 1vw, 0.35rem)',
+                  display: 'flex', flexDirection: 'column', gap: 'clamp(0.2rem, 1vw, 0.35rem)',
                   padding: 'clamp(1.5rem, 2vw, 2rem) 0',
                   borderBottom: '1px solid rgba(238, 236, 232, 0.1)',
-                  cursor: 'crosshair',
-                  textDecoration: 'none',
-                  color: '#eeece8',
-                  transition: 'opacity 0.2s',
+                  cursor: 'crosshair', textDecoration: 'none', color: '#eeece8', transition: 'opacity 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -201,80 +173,49 @@ export default function ContactsPage() {
           </div>
         </div>
 
-        {/* Divider */}
         <div data-divider style={{ background: 'rgba(238, 236, 232, 0.1)', margin: '0' }} />
 
-        {/* Right — form */}
         <div data-col-right style={{ paddingLeft: 'clamp(2rem, 3vw, 4rem)' }}>
           <p style={{
-            fontSize: 'clamp(8px, 1.2vw, 9px)',
-            fontWeight: '700',
-            letterSpacing: '0.25em',
-            opacity: 0.35,
-            marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
+            fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.25em',
+            opacity: 0.35, marginBottom: 'clamp(1.5rem, 3vw, 3rem)',
           }}>{f.or}</p>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 2vw, 2.5rem)' }}>
-            {/* Name */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
-              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
-                {f.name}
-              </label>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>{f.name}</label>
               <input
-                type="text"
-                value={form.name}
-                placeholder={f.namePlaceholder}
+                type="text" value={form.name} placeholder={f.namePlaceholder}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                onFocus={() => setFocused('name')}
-                onBlur={() => setFocused(null)}
-                style={{
-                  ...inputStyle,
-                  borderBottomColor: focused === 'name' ? 'rgba(238, 236, 232, 0.7)' : 'rgba(238, 236, 232, 0.2)',
-                }}
+                onFocus={() => setFocused('name')} onBlur={() => setFocused(null)}
+                style={{ ...inputStyle, borderBottomColor: focused === 'name' ? 'rgba(238, 236, 232, 0.7)' : 'rgba(238, 236, 232, 0.2)' }}
               />
             </div>
 
-            {/* Email */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
-              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
-                {f.emailLabel}
-              </label>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>{f.emailLabel}</label>
               <input
-                type="email"
-                value={form.email}
-                placeholder={f.emailPlaceholder}
+                type="email" value={form.email} placeholder={f.emailPlaceholder}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                onFocus={() => setFocused('email')}
-                onBlur={() => setFocused(null)}
-                style={{
-                  ...inputStyle,
-                  borderBottomColor: focused === 'email' ? 'rgba(238, 236, 232, 0.7)' : 'rgba(238, 236, 232, 0.2)',
-                }}
+                onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
+                style={{ ...inputStyle, borderBottomColor: focused === 'email' ? 'rgba(238, 236, 232, 0.7)' : 'rgba(238, 236, 232, 0.2)' }}
               />
             </div>
 
-            {/* Message */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
-              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>
-                {f.message}
-              </label>
+              <label style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '600', letterSpacing: '0.2em', opacity: 0.4 }}>{f.message}</label>
               <textarea
-                value={form.message}
-                placeholder={f.messagePlaceholder}
-                rows={4}
+                value={form.message} placeholder={f.messagePlaceholder} rows={4}
                 onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
-                onFocus={() => setFocused('message')}
-                onBlur={() => setFocused(null)}
+                onFocus={() => setFocused('message')} onBlur={() => setFocused(null)}
                 style={{
-                  ...inputStyle,
-                  resize: 'none',
+                  ...inputStyle, resize: 'none',
                   borderBottom: `1px solid ${focused === 'message' ? 'rgba(238, 236, 232, 0.7)' : 'rgba(238, 236, 232, 0.2)'}`,
                   lineHeight: '1.7',
                 }}
               />
             </div>
 
-            {/* Submit */}
             <div>
               <button
                 type="submit"
@@ -282,27 +223,14 @@ export default function ContactsPage() {
                   background: sent ? '#eeece8' : 'none',
                   border: '1px solid rgba(238, 236, 232, 0.35)',
                   color: sent ? '#111' : '#eeece8',
-                  fontSize: 'clamp(9px, 1.2vw, 10px)',
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontWeight: '700',
-                  letterSpacing: '0.2em',
+                  fontSize: 'clamp(9px, 1.2vw, 10px)', fontFamily: 'Space Grotesk, sans-serif',
+                  fontWeight: '700', letterSpacing: '0.2em',
                   padding: 'clamp(0.6rem, 1.5vw, 0.85rem) clamp(1.5rem, 3vw, 2.5rem)',
-                  cursor: 'crosshair',
-                  transition: 'background 0.3s, color 0.3s, border-color 0.2s',
+                  cursor: 'crosshair', transition: 'background 0.3s, color 0.3s, border-color 0.2s',
                   minWidth: 'clamp(120px, 25vw, 140px)',
                 }}
-                onMouseEnter={e => {
-                  if (!sent) {
-                    e.currentTarget.style.background = 'rgba(238, 236, 232, 0.08)'
-                    e.currentTarget.style.borderColor = 'rgba(238, 236, 232, 0.6)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!sent) {
-                    e.currentTarget.style.background = 'none'
-                    e.currentTarget.style.borderColor = 'rgba(238, 236, 232, 0.35)'
-                  }
-                }}
+                onMouseEnter={e => { if (!sent) { e.currentTarget.style.background = 'rgba(238, 236, 232, 0.08)'; e.currentTarget.style.borderColor = 'rgba(238, 236, 232, 0.6)' } }}
+                onMouseLeave={e => { if (!sent) { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(238, 236, 232, 0.35)' } }}
               >
                 {sent ? f.sent : f.send}
               </button>
@@ -311,14 +239,10 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <div style={{
         padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)',
         borderTop: '1px solid rgba(238, 236, 232, 0.1)',
-        opacity: 0.3,
-        fontSize: 'clamp(9px, 1.2vw, 10px)',
-        letterSpacing: '0.1em',
-        flexShrink: 0,
+        opacity: 0.3, fontSize: 'clamp(9px, 1.2vw, 10px)', letterSpacing: '0.1em', flexShrink: 0,
       }}>
         {t.contacts.footerText}
       </div>

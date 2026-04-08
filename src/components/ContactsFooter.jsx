@@ -1,14 +1,19 @@
+import { useState, useEffect } from 'react'
 import { useLanguage } from '../i18n/LanguageContext'
-import { getContacts } from '../admin/adminData'
+import { getContacts, defaultContacts } from '../admin/adminData'
 
 export default function ContactsFooter() {
   const { t } = useLanguage()
-  const contacts = getContacts()
+  const [contacts, setContacts] = useState(defaultContacts)
+
+  useEffect(() => {
+    getContacts().then(setContacts)
+  }, [])
 
   const contactLinks = [
-    { label: contacts.email || 'hello@badtaste.pt', href: `mailto:${contacts.email || 'hello@badtaste.pt'}` },
-    { label: contacts.instagram || '@badtaste', href: contacts.instagramUrl || 'https://instagram.com/badtaste', external: true },
-    { label: contacts.phone || '+351 900 000 000', href: `tel:${(contacts.phone || '+351900000000').replace(/\s/g, '')}` },
+    { label: contacts.email, href: `mailto:${contacts.email}` },
+    { label: contacts.instagram, href: contacts.instagramUrl, external: true },
+    { label: contacts.phone, href: `tel:${contacts.phone.replace(/\s/g, '')}` },
   ]
 
   return (
@@ -26,7 +31,6 @@ export default function ContactsFooter() {
         fontFamily: 'Space Grotesk, sans-serif',
       }}
     >
-      {/* Left: brand */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.8rem, 2vw, 1.25rem)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)' }}>
           <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +44,6 @@ export default function ContactsFooter() {
         </p>
       </div>
 
-      {/* Middle: links */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.7rem, 1.5vw, 1rem)' }}>
         <p style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
           {t.footer.navigation}
@@ -66,7 +69,6 @@ export default function ContactsFooter() {
         ))}
       </div>
 
-      {/* Right: contacts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.7rem, 1.5vw, 1rem)' }}>
         <p style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
           {t.footer.contact}

@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import RotatingWheel from '../components/RotatingWheel'
 import BackgroundSlideshow from '../components/BackgroundSlideshow'
 import VideoPreview from '../components/VideoPreview'
 import { getProjects } from '../admin/adminData'
-const projects = getProjects()
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
 
 function LanguageSwitcher() {
@@ -68,7 +67,6 @@ function Navbar() {
       gap: 'clamp(1rem, 2vw, 1.5rem)',
       flexWrap: 'wrap',
     }}>
-      {/* Logo */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -84,11 +82,9 @@ function Navbar() {
           fontWeight: '700',
           letterSpacing: '0.12em',
           color: '#111',
-          display: { sm: 'none', md: 'block' },
         }}>BAD TASTE</span>
       </div>
 
-      {/* Right side: nav links + language switcher */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -123,7 +119,6 @@ function Navbar() {
           height: 'clamp(10px, 1.5vw, 12px)',
           background: '#111',
           opacity: 0.2,
-          display: navLinks.length > 0 ? 'block' : 'none',
         }} />
 
         <LanguageSwitcher />
@@ -150,7 +145,6 @@ function ContactsSection() {
         cursor: 'default',
       }}
     >
-      {/* Left: brand */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.8rem, 2vw, 1.25rem)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)' }}>
           <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -164,7 +158,6 @@ function ContactsSection() {
         </p>
       </div>
 
-      {/* Middle: links */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.7rem, 1.5vw, 1rem)' }}>
         <p style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
           {t.footer.navigation}
@@ -188,7 +181,6 @@ function ContactsSection() {
         ))}
       </div>
 
-      {/* Right: contacts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.7rem, 1.5vw, 1rem)' }}>
         <p style={{ fontSize: 'clamp(8px, 1.2vw, 9px)', fontWeight: '700', letterSpacing: '0.2em', opacity: 0.4, marginBottom: '0.25rem' }}>
           {t.footer.contact}
@@ -227,7 +219,12 @@ function ContactsSection() {
 }
 
 export default function HomePage() {
+  const [projects, setProjects] = useState([])
   const [hoveredProject, setHoveredProject] = useState(null)
+
+  useEffect(() => {
+    getProjects().then(setProjects)
+  }, [])
 
   const projectIndex = projects.findIndex(p => p.slug === hoveredProject?.slug)
 
@@ -235,7 +232,6 @@ export default function HomePage() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
 
-      {/* Wheel section — full viewport height */}
       <main style={{
         height: '100vh',
         overflow: 'hidden',
@@ -258,7 +254,6 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Contacts footer — always visible */}
       <ContactsSection />
     </div>
   )

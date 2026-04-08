@@ -37,23 +37,26 @@ Website de portfólio pessoal com uma experiência visual minimalista e dinâmic
 - Routing: **react-router-dom** v6
 - Styling: **CSS inline** (sem framework)
 - i18n: **contexto React custom** (sem dependências externas) — ES / CA / EN
-- Dados: **localStorage** para projetos/contactos; **gallery.json** (servidor) para galeria
+- Dados: **SQLite** via `better-sqlite3` (`server/data/badtaste.db`) — projetos, contactos, galeria
 - Admin: auth por password via `VITE_ADMIN_PASSWORD` ou palavra-passe customizada em `localStorage`; upload de ficheiros via Multer
-- Upload: **Multer** para vídeos (`/videos/full/`) e fotos (`/images/`)
+- Upload: **Multer** (diskStorage) para vídeos (`/videos/full/`) e fotos (`/images/`) — guarda em disco local
 
 ## Estrutura de Ficheiros
 ```
 server/
   index.js                  — Express app, rotas, middleware CORS/security
+  db.js                     — SQLite setup (better-sqlite3), cria tabelas na inicialização
   routes/
-    upload.js               — POST /api/upload/photo, POST /api/upload/video (Multer)
-    gallery.js              — GET/POST/PUT/DELETE /api/gallery (CRUD da galeria)
+    upload.js               — POST /api/upload/photo, POST /api/upload/video (Multer diskStorage)
+    gallery.js              — GET/POST/PUT/DELETE /api/gallery (CRUD via SQLite)
+    projects.js             — GET/POST/PUT/:slug/DELETE/:slug + PUT /batch /api/projects (CRUD via SQLite)
+    contacts.js             — GET/PUT /api/contacts (upsert row id=1 via SQLite)
   data/
-    gallery.json            — persistência de fotos: [{id, path, caption, order, createdAt}]
+    badtaste.db             — SQLite database (gerado automaticamente; não commitar)
 
 src/
   admin/
-    adminData.js            — getProjects/saveProjects, getContacts/saveContacts (localStorage)
+    adminData.js            — getProjects/saveProjects, getContacts/saveContacts (async — chamadas API)
                               slugify()
     adminAuth.js            — login/logout/isAuthenticated/changePassword (sessionStorage + localStorage)
     galleryData.js          — getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto (API)
@@ -101,26 +104,31 @@ vite.config.js              — proxy /api → localhost:3001
 - Sem texto nos segmentos — títulos aparecem apenas no painel VideoPreview
 
 ## Camada de Dados Admin (`src/admin/adminData.js`)
-- Todas as páginas públicas (HomePage, ProjectPage, VideoPage, ContactsPage) lêem de `getProjects()` / `getContacts()` — **não** importam diretamente `data/projects.js`
-- `getProjects()` — retorna array do localStorage (`bt_admin_projects`) ou fallback para `data/projects.js`
-- `saveProjects(arr)` — persiste em localStorage
-- `getContacts()` — retorna objeto `{email, instagram, instagramUrl, phone}` do localStorage (`bt_admin_contacts`) ou defaults
-- `saveContacts(obj)` — persiste em localStorage
+- Todas as páginas públicas (HomePage, ProjectPage, VideoPage, ContactsPage, ContactsFooter) lêem de `getProjects()` / `getContacts()` — **async**, chamadas à API do backend
+- `getProjects()` — `async` → `GET /api/projects`; fallback para `data/projects.js` se servidor não disponível
+- `saveProjects(arr)` — `async` → `PUT /api/projects/batch` (substitui todos; usado para reorder/delete no admin)
+- `getContacts()` — `async` → `GET /api/contacts`; fallback para `defaultContacts` se servidor não disponível
+- `saveContacts(obj)` — `async` → `PUT /api/contacts`
 - `slugify(text)` — gera slug a partir de texto (remove acentos, substitui espaços por `-`)
-- Para ligar a backend: substituir implementação de `getProjects`/`saveProjects` por chamadas API — interface mantém-se
+- Todas as páginas que usam estes dados fazem `useEffect(() => { getProjects().then(setProjects) }, [])`
 
 ## API Backend (`server/`)
 - Rota `/api/upload/photo` — `POST` (Multer) → salva em `public/images/` → retorna `{path, filename}`
 - Rota `/api/upload/video` — `POST` (Multer) → salva em `public/videos/full/` → retorna `{path, filename}`
+  - Formatos aceites: **mp4, webm, mov, avi, mkv** — limite 2GB
 - Rota `/api/gallery` — `GET` lista fotos | `POST` adiciona foto
-- Rota `/api/gallery/:id` — `PUT` edita caption/order/isCover | `DELETE` apaga + remove ficheiro
+- Rota `/api/gallery/:id` — `PUT` edita caption/order/isCover | `DELETE` apaga registo + ficheiro do disco
   - `isCover: true` limpa automaticamente `isCover` de todas as outras fotos (só uma capa de cada vez)
+- Rota `/api/projects` — `GET` lista | `POST` cria
+- Rota `/api/projects/batch` — `PUT` substitui todos (usado para reorder/delete)
+- Rota `/api/projects/:slug` — `PUT` edita | `DELETE` apaga
+- Rota `/api/contacts` — `GET` lê | `PUT` guarda (upsert, linha única)
 - Servidor roda na **porta 3001** (paralelo ao Vite 5173)
 - CORS configurado para `localhost:5173` e `localhost:3000`
 - Vite proxy: `/api` → `localhost:3001`
 
 ## Galeria de Fotos
-- Dados persistidos em `server/data/gallery.json`: `[{id, path, caption, order, isCover, createdAt}, ...]`
+- Dados persistidos em `server/data/badtaste.db` (tabela `gallery`): `{id, path, caption, sort_order, is_cover, created_at}`
 - Cada foto tem `id` (UUID), `path` (ex: `/images/1234-foto.jpg`), `caption`, `order`, `isCover` (boolean)
 - Upload: seleciona ficheiro no admin → `POST /api/upload/photo` → retorna path → `POST /api/gallery` adiciona à galeria
 - **Foto de capa** (`isCover: true`): a foto marcada como capa aparece na página `/fotos` como card de entrada
@@ -129,7 +137,7 @@ vite.config.js              — proxy /api → localhost:3001
 - Página `/fotos` — card de capa (estilo VideoPage: 16/9, texto centrado, overlay escuro); clicar → `/fotos/galeria`
 - Página `/fotos/galeria` — grid completo de fotos (auto-fill, 3 col → 2 tablet → 1 mobile) + lightbox
 - Lightbox: overlay escuro, setas (◂ ›), Esc fecha (volta ao grid), counter `01/N`, caption exibida
-- Apagar foto: `DELETE /api/gallery/:id` remove do JSON + ficheiro do disco
+- Apagar foto: `DELETE /api/gallery/:id` remove da DB + ficheiro do disco
 
 ## Painel de Admin
 - Rota `/admin` — login (password via `VITE_ADMIN_PASSWORD` no `.env`, default: `badtaste2026`, ou palavra-passe customizada em `localStorage(bt_admin_custom_password)`)
@@ -256,17 +264,20 @@ Cada projeto tem:
 - [x] Auth por password via `VITE_ADMIN_PASSWORD` no `.env` (sessionStorage)
 - [x] Admin: criar, editar, apagar e reordenar projetos (todos os campos)
 - [x] Admin: editar contactos (email, Instagram handle, Instagram URL, telemóvel)
-- [x] Camada de dados `adminData.js`: páginas públicas lêem de localStorage (fallback para projects.js)
+- [x] Camada de dados `adminData.js`: funções async que chamam API (`/api/projects`, `/api/contacts`); fallback para `data/projects.js`
 - [x] `.env` criado e ignorado pelo git; `.env.example` como template
 - [x] Backend Express.js na porta 3001 (paralelo ao Vite 5173)
-- [x] Multer: upload de fotos (`/images/`) e vídeos (`/videos/full/`)
-- [x] API gallery CRUD: GET/POST/PUT/DELETE `/api/gallery` com persistência em JSON
+- [x] Multer (diskStorage): upload de fotos (`/images/`) e vídeos (`/videos/full/`) — formatos: mp4, webm, mov, avi, mkv
+- [x] **SQLite** (`better-sqlite3`): persistência de projetos, contactos e galeria em `server/data/badtaste.db`
+- [x] API projects CRUD: GET/POST/PUT/:slug/DELETE/:slug + PUT /batch
+- [x] API contacts: GET/PUT (upsert linha única)
+- [x] API gallery CRUD: GET/POST/PUT/:id/DELETE/:id com persistência SQLite
 - [x] Camada `galleryData.js`: getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto
 - [x] Vite proxy: `/api` → `localhost:3001`
 - [x] Scripts npm: `dev` (Vite+Express), `dev:frontend`, `server`
 - [x] Página `/fotos` (PhotosPage.jsx): dark theme `#111`; card de capa 16/9 com hover overlay animado (nome + "VER GALERIA"); zoom subtil na imagem ao hover; clicar → `/fotos/galeria`
 - [x] Página `/fotos/galeria` (GalleryPage.jsx): dark theme `#111`; grid 2 col quadrado edge-to-edge (1px gap preto); hover → overlay + caption + contador animados; lightbox minimalista (counter top-left, `✕` top-right, `‹ ›` laterais, caption bottom-center)
-- [x] Foto de capa: campo `isCover` em `gallery.json`; botão `☆/★ CAPA` no admin; só uma capa de cada vez
+- [x] Foto de capa: campo `is_cover` na tabela `gallery` (SQLite); botão `☆/★ CAPA` no admin; só uma capa de cada vez
 - [x] Caption da foto capa = nome visível no card de entrada da página `/fotos`
 - [x] AdminDashboard com secção GALERIA: upload de fotos, edição de caption/nome, botão ☆/★ CAPA, apagar com confirmação
 - [x] AdminProjectEditor com upload direto: thumbnail, videoFull, videoPreview (com loading state)
