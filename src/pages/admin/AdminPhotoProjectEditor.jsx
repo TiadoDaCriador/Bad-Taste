@@ -11,12 +11,12 @@ import { uploadPhoto } from '../../admin/galleryData'
 const mono = { fontFamily: 'Space Grotesk, sans-serif' }
 
 const s = {
-  page: { minHeight: '100vh', background: '#111', color: '#eeece8', ...mono, cursor: 'crosshair' },
+  page: { minHeight: '100vh', background: '#1a1a1a', color: '#eeece8', ...mono, cursor: 'crosshair' },
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: 'clamp(1rem, 3vw, 1.25rem) clamp(1rem, 3vw, 2rem)',
     borderBottom: '1px solid rgba(238,236,232,0.1)',
-    position: 'sticky', top: 0, background: '#111', zIndex: 10,
+    position: 'sticky', top: 0, background: '#1a1a1a', zIndex: 10,
     flexWrap: 'wrap', gap: '1rem',
   },
   body: { maxWidth: '900px', margin: '0 auto', padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)' },
@@ -144,7 +144,7 @@ export default function AdminPhotoProjectEditor() {
   }
 
   if (!project) return (
-    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
       <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#eeece8', opacity: 0.3 }}>—</span>
     </div>
   )

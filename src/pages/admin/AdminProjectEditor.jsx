@@ -19,7 +19,7 @@ const emptyProject = {
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#111',
+    background: '#1a1a1a',
     color: '#eeece8',
     fontFamily: 'Space Grotesk, sans-serif',
     cursor: 'crosshair',
@@ -32,7 +32,7 @@ const s = {
     borderBottom: '1px solid rgba(238,236,232,0.1)',
     position: 'sticky',
     top: 0,
-    background: '#111',
+    background: '#1a1a1a',
     zIndex: 10,
   },
   body: { maxWidth: '720px', margin: '0 auto', padding: '3rem 2rem 6rem' },

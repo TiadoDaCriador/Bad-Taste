@@ -1,6 +1,6 @@
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
 
-export default function LanguageSwitcher({ color = '#111' }) {
+export default function LanguageSwitcher({ color = '#111', blendMode = 'normal' }) {
   const { lang, changeLanguage } = useLanguage()
 
   return (
@@ -21,6 +21,7 @@ export default function LanguageSwitcher({ color = '#111' }) {
               opacity: lang === l ? 1 : 0.35,
               transition: 'opacity 0.2s',
               fontFamily: 'inherit',
+              mixBlendMode: blendMode,
             }}
             onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
             onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
@@ -28,7 +29,7 @@ export default function LanguageSwitcher({ color = '#111' }) {
             {l.toUpperCase()}
           </button>
           {i < LANGUAGES.length - 1 && (
-            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: color, opacity: 0.2 }}>|</span>
+            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: color, opacity: 0.2, mixBlendMode: blendMode }}>|</span>
           )}
         </span>
       ))}

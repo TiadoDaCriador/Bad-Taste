@@ -11,7 +11,7 @@ const mono = { fontFamily: 'Space Grotesk, sans-serif' }
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#111',
+    background: '#1a1a1a',
     color: '#eeece8',
     ...mono,
     cursor: 'crosshair',
@@ -24,7 +24,7 @@ const s = {
     borderBottom: '1px solid rgba(238,236,232,0.1)',
     position: 'sticky',
     top: 0,
-    background: '#111',
+    background: '#1a1a1a',
     zIndex: 10,
     flexWrap: 'wrap',
     gap: '1rem',

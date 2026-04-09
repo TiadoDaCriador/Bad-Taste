@@ -66,7 +66,7 @@ export default function ContactsPage() {
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: '#111',
+      background: '#1a1a1a',
       color: '#eeece8',
       display: 'flex',
       flexDirection: 'column',

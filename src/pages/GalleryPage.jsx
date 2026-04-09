@@ -12,6 +12,7 @@ function GalleryCard({ photo, index, total, onClick }) {
 
   return (
     <div
+      data-gallery-card
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -138,26 +139,28 @@ const GalleryPage = () => {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>
         <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#eeece8', opacity: 0.3 }}>—</span>
       </div>
     );
   }
 
-  const isOdd = gallery.length % 2 !== 0
-
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#111',
+      background: '#1a1a1a',
       fontFamily: 'Space Grotesk, sans-serif',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
       display: 'flex', flexDirection: 'column',
     }}>
       <style>{`
-        @media (max-width: 600px) {
+        @media (max-width: 900px) {
+          [data-gallery-grid] { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 500px) {
           [data-gallery-grid] { grid-template-columns: 1fr !important; }
+          [data-gallery-card] { aspect-ratio: 3/4 !important; }
         }
       `}</style>
 
@@ -175,8 +178,8 @@ const GalleryPage = () => {
       ) : (
         <div data-gallery-grid style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '1px',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '2px',
           background: '#000',
           flex: 1,
         }}>
@@ -189,10 +192,6 @@ const GalleryPage = () => {
               onClick={() => setLightboxIndex(idx)}
             />
           ))}
-          {/* Fill last row if odd */}
-          {isOdd && (
-            <div style={{ background: '#0a0a0a', aspectRatio: '1 / 1' }} />
-          )}
         </div>
       )}
 

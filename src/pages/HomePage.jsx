@@ -15,7 +15,7 @@ function ContactsSection() {
       style={{
         position: 'relative',
         zIndex: 1,
-        background: '#111',
+        background: '#1a1a1a',
         color: '#eeece8',
         padding: 'clamp(2rem, 5vw, 5rem) clamp(1rem, 3vw, 1.75rem) clamp(2rem, 3vw, 4rem)',
         display: 'grid',
@@ -109,7 +109,7 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar theme="light" variant="fixed" />
+      <Navbar theme="light" variant="fixed" autoColor={true} />
 
       <main style={{
         height: '100vh',

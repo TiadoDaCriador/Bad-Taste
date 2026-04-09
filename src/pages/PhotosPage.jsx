@@ -5,7 +5,7 @@ import { getPhotoProjects, getPhotoProjectPhotos } from '../admin/photoProjectsD
 import ContactsFooter from '../components/ContactsFooter';
 import Navbar from '../components/Navbar';
 
-function PhotoCard({ project, index, total, isLast, isOdd, photoCount }) {
+function PhotoCard({ project, index, total, photoCount }) {
   const navigate = useNavigate()
   const [hovered, setHovered] = useState(false)
 
@@ -14,16 +14,17 @@ function PhotoCard({ project, index, total, isLast, isOdd, photoCount }) {
 
   return (
     <div
+      data-photo-card
       onClick={() => navigate(`/fotos/${project.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
-        aspectRatio: isLast && isOdd ? '32/9' : '16/9',
+        width: '100%',
+        aspectRatio: '16/9',
         overflow: 'hidden',
         cursor: 'crosshair',
         background: '#0a0a0a',
-        gridColumn: isLast && isOdd ? 'span 2' : 'auto',
       }}
     >
       {project.thumbnail ? (
@@ -121,7 +122,6 @@ export default function PhotosPage() {
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  const isOdd = projects.length % 2 !== 0
   const handleBack = () => {
     setVisible(false)
     setTimeout(() => navigate('/'), 250)
@@ -130,7 +130,7 @@ export default function PhotosPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#111',
+      background: '#1a1a1a',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
       fontFamily: 'Space Grotesk, sans-serif',
@@ -138,18 +138,18 @@ export default function PhotosPage() {
       flexDirection: 'column',
     }}>
       <style>{`
-        @media (max-width: 768px) {
-          [data-photos-grid] { grid-template-columns: 1fr !important; }
+        @media (max-width: 600px) {
+          [data-photo-card] { aspect-ratio: 4/3 !important; }
         }
       `}</style>
 
       <Navbar theme="dark" variant="sticky" activeItem="photos" showBack onBack={handleBack} />
 
-      <div data-photos-grid style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '1px',
-        background: '#000',
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+        background: '#1a1a1a',
         flex: 1,
       }}>
         {projects.map((project, i) => (
@@ -158,8 +158,6 @@ export default function PhotosPage() {
             project={project}
             index={i}
             total={projects.length}
-            isLast={i === projects.length - 1}
-            isOdd={isOdd}
             photoCount={photoCounts[project.slug] || 0}
           />
         ))}

@@ -200,7 +200,7 @@ Cada projeto tem:
 
 ## Navbar Partilhada (`src/components/Navbar.jsx`)
 - Props:
-  - `theme` — 'light' (fundo transparente, texto `#111`) ou 'dark' (fundo `#111`, texto `#eeece8`)
+  - `theme` — 'light' (fundo transparente, texto `#111`) ou 'dark' (fundo `#1a1a1a`, texto `#eeece8`)
   - `variant` — 'fixed' (position: fixed) ou 'sticky' (position: sticky)
   - `activeItem` — 'video'|'photos'|'contacts'|null — destaca o link correspondente com border-bottom
   - `showBack` — boolean; se true, mostra botão "← VOLVER" no canto esquerdo
@@ -225,7 +225,7 @@ Cada projeto tem:
 - `FADE_DURATION = 900ms` — duração do crossfade
 - Prop `paused` — quando `true`, o intervalo não avança (imagem actual fica congelada)
 - Prop `videoProject` — quando definido, faz fade-in de `<video>` full-screen (objectFit: cover) sobre o slideshow; ao remover, fade-out e slideshow retoma
-- Lista de imagens hardcoded no componente (16 ficheiros de `public/images/`)
+- Carrega imagens **exclusivamente da API** (`getSlideshow()`) — só mostra imagens subidas via admin; sem fallback para imagens hardcoded
 - `pointerEvents: none` — não interfere com interações do anel
 - `RotatingWheel` expõe `onHoverChange(project | null)` → `HomePage` passa `hoveredProject` ao slideshow e ao `VideoPreview`
 
@@ -276,7 +276,7 @@ Cada projeto tem:
 - [x] Logo SVG "BT" no canto superior esquerdo (quadrado preto + texto bege)
 - [x] Navbar fixa (topo): logo + "BAD TASTE" à esquerda; VIDEO / PHOTOS / CONTACTS à direita
 - [x] CONTACTS na navbar navega para `/contactos` (página separada, fundo preto, Esc volta)
-- [x] Footer de contactos na homepage (fundo `#111`): email, Instagram, telemóvel — visível ao fazer scroll
+- [x] Footer de contactos na homepage (fundo `#1a1a1a`): email, Instagram, telemóvel — visível ao fazer scroll
 - [x] Footer tem `position: relative; z-index: 1` para aparecer acima do BackgroundSlideshow fixo
 - [x] `history.scrollRestoration = 'manual'` em `main.jsx` — página começa sempre no topo ao refresh
 - [x] Rota `/contactos` registada em `main.jsx`
@@ -284,7 +284,7 @@ Cada projeto tem:
 - [x] Sistema i18n: Espanhol (padrão), Catalão e Inglês — seletor ES|CA|EN na navbar
 - [x] Traduções completas: UI (navbar, footer, contactos, erros) + títulos/descrições/tags de todos os projetos
 - [x] Língua guardada em `localStorage` (persiste entre sessões)
-- [x] Página `/video` criada (`VideoPage.jsx`): grid 2 colunas dark (`#111`), todos os projetos; thumbnail visível por defeito (sem texto); hover → overlay escuro + título/tags/contador animados (fade+translateY); vídeo reproduz ao hover; clique → `/projeto/:slug`; último projeto ocupa largura total se ímpar; Esc volta à homepage
+- [x] Página `/video` criada (`VideoPage.jsx`): layout hero-style full-width (1 card por linha, 16:9), dark (`#1a1a1a`), todos os projetos; thumbnail visível por defeito (sem texto); hover → overlay escuro + título/tags/contador animados (fade+translateY); vídeo reproduz ao hover; clique → `/projeto/:slug`; Esc volta à homepage
 - [x] Navbar VIDEO atualizado de `#` para `/video`; rota `/video` registada em `main.jsx`
 - [x] Página `/contactos` redesenhada: layout 2 colunas (info + formulário), separadas por linha vertical fina; formulário com inputs `border-bottom` only, labels caps, botão rectangular sem bordas arredondadas; estado "enviado" inverte cores por 3s; traduções do formulário adicionadas a todas as línguas (`t.contacts.form`)
 - [x] Painel de admin criado (`/admin`, `/admin/dashboard`, `/admin/projects/:slug`)
@@ -302,8 +302,8 @@ Cada projeto tem:
 - [x] Camada `galleryData.js`: getGallery, uploadPhoto, uploadVideo, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, setCoverPhoto
 - [x] Vite proxy: `/api` → `localhost:3001`
 - [x] Scripts npm: `dev` (Vite+Express), `dev:frontend`, `server`
-- [x] Página `/fotos` (PhotosPage.jsx): dark theme `#111`; card de capa 16/9 com hover overlay animado (nome + "VER GALERIA"); zoom subtil na imagem ao hover; clicar → `/fotos/galeria`
-- [x] Página `/fotos/galeria` (GalleryPage.jsx): dark theme `#111`; grid 2 col quadrado edge-to-edge (1px gap preto); hover → overlay + caption + contador animados; lightbox minimalista (counter top-left, `✕` top-right, `‹ ›` laterais, caption bottom-center)
+- [x] Página `/fotos` (PhotosPage.jsx): layout hero-style full-width (1 card por linha), dark theme `#1a1a1a`; card 16/9 com hover overlay animado (nome + "VER GALERIA"); zoom subtil na imagem ao hover; clicar → `/fotos/galeria`
+- [x] Página `/fotos/galeria` (GalleryPage.jsx): layout responsivo — grid 3 col desktop → 2 tablet → 1 mobile, dark theme `#1a1a1a`, quadrado edge-to-edge (2px gap preto); hover → overlay + caption + contador animados; lightbox minimalista (counter top-left, `✕` top-right, `‹ ›` laterais, caption bottom-center)
 - [x] Foto de capa: campo `is_cover` na tabela `gallery` (SQLite); botão `☆/★ CAPA` no admin; só uma capa de cada vez
 - [x] Caption da foto capa = nome visível no card de entrada da página `/fotos`
 - [x] AdminDashboard com secção GALERIA: upload de fotos, edição de caption/nome, botão ☆/★ CAPA, apagar com confirmação
@@ -314,7 +314,7 @@ Cada projeto tem:
 - [x] Botão "VER GALERIA" no admin dashboard para acesso rápido
 - [x] Footer (`ContactsFooter.jsx`) partilhado: HomePage, VideoPage, PhotosPage, GalleryPage
 - [x] Back button (← VOLVER) em VideoPage, PhotosPage, GalleryPage — com fade suave
-- [x] VideoPage / PhotosPage / GalleryPage: redesign visual completo — fundo `#111`, navbar dark, cards sem texto por defeito; info surge **apenas ao hover** (overlay fade + translateY); BT logo invertido (beige sobre preto); estética editorial editorial dark inspirada em franciscotaboas.myportfolio.com
+- [x] VideoPage / PhotosPage / GalleryPage: redesign hero-style — layout full-width (cards grandes), fundo `#1a1a1a`, navbar dark, cards sem texto por defeito; info surge **apenas ao hover** (overlay fade + translateY); BT logo invertido (beige sobre preto); estética editorial dark inspirada em franciscotaboas.myportfolio.com
 - [x] Admin: secção **SEGURANÇA** — alterar palavra-passe (verifica atual, mín. 6 chars, confirmação)
 - [x] Palavra-passe customizada guardada em `localStorage(bt_admin_custom_password)`, sobrepõe-se ao `.env`
 - [x] Responsividade completa em **todas as páginas**: `clamp()` para fluid typography/spacing
@@ -329,6 +329,14 @@ Cada projeto tem:
 - [x] **LanguageSwitcher extraído** para componente separado (`LanguageSwitcher.jsx`) — elimina duplicação em 4 ficheiros, prop `color` para ajustar cor do texto
 - [x] **ContactsFooter redesenhado** — 3 colunas (branding + navegar + contacto) em desktop, stack em mobile; real `<Link>` components para `/video`, `/fotos`, `/contactos`; email, Instagram, telemóvel com links funcionais; bottom bar com copyright
 - [x] **Fix do item ativo na navbar** — "FOTOS" permanece ativo quando navegado para `/fotos` e `/fotos/galeria` (anteriormente mostrava "GALERIA")
+- [x] **Redesign hero-style VideoPage/PhotosPage** — layout full-width (1 card por linha, 16:9), flex column em vez de grid 2 col; gap `2px` preto fina; mantém hover interativo (vídeo + overlay + info)
+- [x] **Redesign grid GalleryPage** — grid responsivo 3 col → 2 → 1 (breakpoints 900px / 500px), gap `2px` preto; aspecto quadrado mantido
+- [x] **Cor de fundo unificada** — mudança global `#111` → `#1a1a1a` em todas as páginas (VideoPage, PhotosPage, GalleryPage, ContactsPage, HomePage, PhotoProjectPage, AdminDashboard, AdminProjectEditor, AdminPhotoProjectEditor, AdminLogin, ContactsFooter) — cor do menu hambúrguer aplicada ao projeto
+- [x] **BackgroundSlideshow sem fallback hardcoded** — carrega **exclusivamente** imagens subidas via admin; sem 16 imagens de fallback; se vazio, mostra fundo preto
+- [x] **3 UI Improvements — Abril 2026**:
+  - [x] **Fix hamburger menu close button** — overlay z-index aumentado de 99 → 101 para ficar acima da navbar (z-index 100); cross button agora funciona
+  - [x] **Imagens responsivas em mobile** — BackgroundSlideshow `backgroundPosition: 'center 30%'` (melhor para retratos); VideoPage/PhotosPage cards `aspect-ratio: 4/3` em ≤600px (em vez de 16/9); GalleryPage cards `aspect-ratio: 3/4` em ≤500px single-col (em vez de 1/1)
+  - [x] **Navbar autoColor com mix-blend-mode: difference** — HomePage navbar recebe prop `autoColor={true}`; background transparente, cor branca; `mix-blend-mode: 'difference'` aplica-se ao container direito/esquerdo + texto/links; SVG logo branco; inverte automaticamente contra qualquer fundo (claro/escuro)
 - [ ] Formulário de contacto ligado a serviço de envio real (Formspree / Resend / etc.) — atualmente só UI
 - [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
 - [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)

@@ -63,7 +63,7 @@ export default function PhotoProjectPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#111',
+      background: '#1a1a1a',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
       fontFamily: 'Space Grotesk, sans-serif',

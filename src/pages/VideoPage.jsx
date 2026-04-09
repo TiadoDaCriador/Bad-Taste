@@ -5,7 +5,7 @@ import { useLanguage } from '../i18n/LanguageContext'
 import ContactsFooter from '../components/ContactsFooter'
 import Navbar from '../components/Navbar'
 
-function VideoCard({ project, index, total, t, isLast, isOdd }) {
+function VideoCard({ project, index, total, t }) {
   const navigate = useNavigate()
   const videoRef = useRef(null)
   const [hovered, setHovered] = useState(false)
@@ -32,16 +32,17 @@ function VideoCard({ project, index, total, t, isLast, isOdd }) {
 
   return (
     <div
+      data-video-card
       onClick={() => navigate(`/projeto/${project.slug}`)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
         position: 'relative',
-        aspectRatio: isLast && isOdd ? '32/9' : '16/9',
+        width: '100%',
+        aspectRatio: '16/9',
         overflow: 'hidden',
         cursor: 'crosshair',
         background: '#0a0a0a',
-        gridColumn: isLast && isOdd ? 'span 2' : 'auto',
       }}
     >
       {project.thumbnail && (
@@ -155,7 +156,6 @@ export default function VideoPage() {
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  const isOdd = projects.length % 2 !== 0
   const handleBack = () => {
     setVisible(false)
     setTimeout(() => navigate('/'), 250)
@@ -164,7 +164,7 @@ export default function VideoPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#111',
+      background: '#1a1a1a',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.3s ease',
       fontFamily: 'Space Grotesk, sans-serif',
@@ -172,18 +172,18 @@ export default function VideoPage() {
       flexDirection: 'column',
     }}>
       <style>{`
-        @media (max-width: 768px) {
-          [data-video-grid] { grid-template-columns: 1fr !important; }
+        @media (max-width: 600px) {
+          [data-video-card] { aspect-ratio: 4/3 !important; }
         }
       `}</style>
 
       <Navbar theme="dark" variant="sticky" activeItem="video" showBack onBack={handleBack} />
 
-      <div data-video-grid style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '1px',
-        background: '#000',
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+        background: '#1a1a1a',
         flex: 1,
       }}>
         {projects.map((project, i) => (
@@ -193,8 +193,6 @@ export default function VideoPage() {
             index={i}
             total={projects.length}
             t={t}
-            isLast={i === projects.length - 1}
-            isOdd={isOdd}
           />
         ))}
       </div>

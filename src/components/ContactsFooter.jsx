@@ -16,7 +16,7 @@ export default function ContactsFooter() {
       style={{
         position: 'relative',
         zIndex: 1,
-        background: '#111',
+        background: '#1a1a1a',
         color: '#eeece8',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         fontFamily: 'Space Grotesk, sans-serif',

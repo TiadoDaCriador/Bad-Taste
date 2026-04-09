@@ -40,14 +40,21 @@ export default function BackgroundSlideshow({ paused, videoProject }) {
   // Carregar imagens do slideshow da API
   useEffect(() => {
     getSlideshow().then(imgs => {
-      const paths = imgs.length > 0 ? imgs.map(img => img.path) : FALLBACK_IMAGES
+      const paths = imgs.map(img => img.path)
       imagesRef.current = paths
       setImages(paths)
       // Reinicializar slots com as novas imagens
-      setSlots([
-        { src: paths[0], opacity: 1, zIndex: 1 },
-        { src: paths[1] || paths[0], opacity: 0, zIndex: 0 },
-      ])
+      if (paths.length > 0) {
+        setSlots([
+          { src: paths[0], opacity: 1, zIndex: 1 },
+          { src: paths[1] || paths[0], opacity: 0, zIndex: 0 },
+        ])
+      } else {
+        setSlots([
+          { src: '', opacity: 1, zIndex: 1 },
+          { src: '', opacity: 0, zIndex: 0 },
+        ])
+      }
     })
   }, [])
 
@@ -124,7 +131,7 @@ export default function BackgroundSlideshow({ paused, videoProject }) {
             inset: 0,
             backgroundImage: `url(${slot.src})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundPosition: 'center 30%',
             opacity: showVideo ? 0 : slot.opacity,
             zIndex: slot.zIndex,
             transition: `opacity ${FADE_DURATION}ms ease`,

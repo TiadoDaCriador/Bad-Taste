@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useLanguage } from '../i18n/LanguageContext'
 import LanguageSwitcher from './LanguageSwitcher'
 
-export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem = null, showBack = false, onBack = null }) {
+export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem = null, showBack = false, onBack = null, autoColor = false }) {
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -21,10 +21,11 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
   }, [])
 
   const isLight = theme === 'light'
-  const bgColor = isLight ? 'transparent' : '#111'
-  const textColor = isLight ? '#111' : '#eeece8'
+  const bgColor = autoColor ? 'transparent' : (isLight ? 'transparent' : '#111')
+  const textColor = autoColor ? 'white' : (isLight ? '#111' : '#eeece8')
   const borderColor = isLight ? 'rgba(17, 17, 17, 0.1)' : 'rgba(255, 255, 255, 0.08)'
   const inactiveLinkOpacity = isLight ? 0.75 : 0.45
+  const mixBlendMode = autoColor ? 'difference' : 'normal'
 
   const navLinks = [
     { label: t.nav.video, to: '/video', key: 'video' },
@@ -57,8 +58,9 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
           zIndex: 100,
           gap: 'clamp(1rem, 2vw, 1.5rem)',
           backgroundColor: bgColor,
-          borderBottom: variant === 'sticky' && !isLight ? `1px solid ${borderColor}` : 'none',
+          borderBottom: autoColor ? 'none' : (variant === 'sticky' && !isLight ? `1px solid ${borderColor}` : 'none'),
           pointerEvents: 'auto',
+          mixBlendMode: mixBlendMode,
         }}
       >
         {/* Left: Back button + Logo */}
@@ -81,6 +83,7 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
                 padding: 0,
                 opacity: 0.75,
                 transition: 'opacity 0.2s',
+                mixBlendMode: mixBlendMode,
               }}
               onMouseEnter={e => e.currentTarget.style.opacity = '1'}
               onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
@@ -96,8 +99,8 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
             gap: 'clamp(6px, 1.5vw, 10px)',
           }}>
             <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bad Taste">
-              <rect width="36" height="36" fill={isLight ? '#111' : 'none'} stroke={isLight ? 'none' : textColor} strokeWidth={isLight ? 0 : 1.5}/>
-              <text x="50%" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill={isLight ? '#eeece8' : '#111'} textAnchor="middle">BT</text>
+              <rect width="36" height="36" fill={autoColor ? 'none' : (isLight ? '#111' : 'none')} stroke={autoColor ? 'white' : (isLight ? 'none' : textColor)} strokeWidth={autoColor ? 1.5 : (isLight ? 0 : 1.5)}/>
+              <text x="50%" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill={autoColor ? 'white' : (isLight ? '#eeece8' : '#111')} textAnchor="middle">BT</text>
             </svg>
             {!isMobile && (
               <span style={{
@@ -135,6 +138,7 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
                     textDecoration: 'none',
                     borderBottom: isActive ? `1px solid ${textColor}` : 'none',
                     paddingBottom: isActive ? '2px' : '0',
+                    mixBlendMode: mixBlendMode,
                   }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.opacity = '0.8' }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.opacity = inactiveLinkOpacity }}
@@ -151,25 +155,28 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
               opacity: 0.2,
             }} />
 
-            <LanguageSwitcher color={textColor} />
+            <LanguageSwitcher color={textColor} blendMode={mixBlendMode} />
           </div>
         ) : (
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: textColor,
-              fontSize: 'clamp(18px, 5vw, 24px)',
-              cursor: 'crosshair',
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {menuOpen ? '✕' : '☰'}
-          </button>
+          !menuOpen && (
+            <button
+              onClick={() => setMenuOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: textColor,
+                fontSize: 'clamp(18px, 5vw, 24px)',
+                cursor: 'crosshair',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mixBlendMode: mixBlendMode,
+              }}
+            >
+              ☰
+            </button>
+          )
         )}
       </nav>
 
@@ -183,7 +190,7 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
             right: 0,
             bottom: 0,
             backgroundColor: '#1a1a1a',
-            zIndex: 99,
+            zIndex: 101,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -232,12 +239,13 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
                   fontSize: 'clamp(18px, 4vw, 24px)',
                   fontWeight: '700',
                   letterSpacing: '0.15em',
-                  color: '#eeece8',
+                  color: autoColor ? 'white' : '#eeece8',
                   cursor: 'crosshair',
                   opacity: 0.8,
                   transition: 'opacity 0.2s',
                   textDecoration: 'none',
                   textAlign: 'center',
+                  mixBlendMode: autoColor ? 'difference' : 'normal',
                 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '1'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
@@ -260,12 +268,13 @@ export default function Navbar({ theme = 'dark', variant = 'sticky', activeItem 
               fontSize: 'clamp(10px, 1.5vw, 11px)',
               fontWeight: '700',
               letterSpacing: '0.15em',
-              color: '#eeece8',
+              color: autoColor ? 'white' : '#eeece8',
               opacity: 0.5,
+              mixBlendMode: mixBlendMode,
             }}>
               LINGUA
             </div>
-            <LanguageSwitcher color="#eeece8" />
+            <LanguageSwitcher color={autoColor ? 'white' : '#eeece8'} blendMode={mixBlendMode} />
           </div>
         </div>
       )}
