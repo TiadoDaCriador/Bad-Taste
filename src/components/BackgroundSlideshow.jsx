@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import { getSlideshow } from '../admin/slideshowData'
 
-const IMAGES = [
+const FALLBACK_IMAGES = [
   '/images/1769655142724-950339847.png',
   '/images/1769655142730-235461476.png',
   '/images/1769655170100-787475231.PNG',
@@ -24,25 +25,44 @@ const FADE_DURATION = 900  // ms do crossfade
 const CLIP_DURATION = 20   // segundos de clip de preview
 
 export default function BackgroundSlideshow({ paused, videoProject }) {
+  const [images, setImages] = useState([])
   // Dois slots que alternam: um visível (opacity 1), outro carregado mas invisível (opacity 0)
   const [slots, setSlots] = useState([
-    { src: IMAGES[0], opacity: 1, zIndex: 1 },
-    { src: IMAGES[1], opacity: 0, zIndex: 0 },
+    { src: FALLBACK_IMAGES[0], opacity: 1, zIndex: 1 },
+    { src: FALLBACK_IMAGES[1], opacity: 0, zIndex: 0 },
   ])
+  const imagesRef = useRef([])
   const activeSlotRef = useRef(0) // qual slot está actualmente visível
   const nextIdxRef = useRef(2)    // próxima imagem a mostrar
   const pausedRef = useRef(paused)
   const videoRef = useRef(null)
 
+  // Carregar imagens do slideshow da API
+  useEffect(() => {
+    getSlideshow().then(imgs => {
+      const paths = imgs.length > 0 ? imgs.map(img => img.path) : FALLBACK_IMAGES
+      imagesRef.current = paths
+      setImages(paths)
+      // Reinicializar slots com as novas imagens
+      setSlots([
+        { src: paths[0], opacity: 1, zIndex: 1 },
+        { src: paths[1] || paths[0], opacity: 0, zIndex: 0 },
+      ])
+    })
+  }, [])
+
   useEffect(() => { pausedRef.current = paused }, [paused])
 
   useEffect(() => {
+    // Só inicia o interval se há imagens
+    if (imagesRef.current.length === 0) return
+
     const id = setInterval(() => {
       if (pausedRef.current) return
 
       const active = activeSlotRef.current
       const incoming = 1 - active
-      const nextImg = IMAGES[nextIdxRef.current % IMAGES.length]
+      const nextImg = imagesRef.current[nextIdxRef.current % imagesRef.current.length]
       nextIdxRef.current++
       activeSlotRef.current = incoming
 
@@ -55,7 +75,7 @@ export default function BackgroundSlideshow({ paused, videoProject }) {
     }, SHOW_DURATION)
 
     return () => clearInterval(id)
-  }, [])
+  }, [images.length])
 
   // Lógica do vídeo de preview no fundo
   useEffect(() => {

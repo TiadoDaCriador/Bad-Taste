@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage, LANGUAGES } from '../i18n/LanguageContext';
-import { getProjects } from '../admin/adminData';
+import { getPhotoProjects, getPhotoProjectPhotos } from '../admin/photoProjectsData';
 import ContactsFooter from '../components/ContactsFooter';
 
 function LanguageSwitcher() {
@@ -29,20 +29,16 @@ function LanguageSwitcher() {
   )
 }
 
-function PhotoCard({ project, index, total, t, isLast, isOdd }) {
+function PhotoCard({ project, index, total, isLast, isOdd, photoCount }) {
   const navigate = useNavigate()
   const [hovered, setHovered] = useState(false)
-
-  const localized = t.projects?.[project.slug] || {}
-  const title = localized.title || project.title
-  const tags = localized.tags || project.tags || []
 
   const padded = String(index + 1).padStart(2, '0')
   const paddedTotal = String(total).padStart(2, '0')
 
   return (
     <div
-      onClick={() => navigate(`/projeto/${project.slug}`)}
+      onClick={() => navigate(`/fotos/${project.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -57,7 +53,7 @@ function PhotoCard({ project, index, total, t, isLast, isOdd }) {
       {project.thumbnail ? (
         <img
           src={project.thumbnail}
-          alt={title}
+          alt={project.title}
           style={{
             position: 'absolute', inset: 0,
             width: '100%', height: '100%', objectFit: 'cover',
@@ -101,21 +97,15 @@ function PhotoCard({ project, index, total, t, isLast, isOdd }) {
           fontWeight: '700', color: '#eeece8',
           letterSpacing: '0.1em', margin: 0, lineHeight: 1.05,
         }}>
-          {title.toUpperCase()}
+          {project.title.toUpperCase()}
         </h2>
-        {tags.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.3rem' }}>
-            {tags.slice(0, 3).map(tag => (
-              <span key={tag} style={{
-                fontSize: 'clamp(7px, 0.9vw, 9px)',
-                color: '#eeece8', opacity: 0.6,
-                letterSpacing: '0.2em', fontWeight: '500',
-              }}>
-                {tag.toUpperCase()}
-              </span>
-            ))}
-          </div>
-        )}
+        <p style={{
+          fontSize: 'clamp(7px, 0.9vw, 9px)',
+          color: '#eeece8', opacity: 0.6,
+          letterSpacing: '0.2em', fontWeight: '500',
+        }}>
+          {photoCount} {photoCount === 1 ? 'FOTO' : 'FOTOS'}
+        </p>
       </div>
     </div>
   )
@@ -126,9 +116,21 @@ export default function PhotosPage() {
   const { t } = useLanguage()
   const [projects, setProjects] = useState([])
   const [visible, setVisible] = useState(false)
+  const [photoCounts, setPhotoCounts] = useState({})
 
   useEffect(() => {
-    getProjects().then(setProjects)
+    const loadProjects = async () => {
+      const projs = await getPhotoProjects()
+      setProjects(projs)
+      // Load photo counts for each project
+      const counts = {}
+      for (const proj of projs) {
+        const photos = await getPhotoProjectPhotos(proj.slug)
+        counts[proj.slug] = photos.length
+      }
+      setPhotoCounts(counts)
+    }
+    loadProjects()
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
@@ -244,9 +246,9 @@ export default function PhotosPage() {
             project={project}
             index={i}
             total={projects.length}
-            t={t}
             isLast={i === projects.length - 1}
             isOdd={isOdd}
+            photoCount={photoCounts[project.slug] || 0}
           />
         ))}
       </div>

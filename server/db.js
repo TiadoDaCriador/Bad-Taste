@@ -62,6 +62,13 @@ db.exec(`
     sort_order   INTEGER DEFAULT 0,
     created_at   TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS slideshow_images (
+    id         TEXT PRIMARY KEY,
+    path       TEXT NOT NULL UNIQUE,
+    sort_order INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
 `)
 
 export default db

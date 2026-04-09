@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { isAuthenticated, logout, changePassword } from '../../admin/adminAuth'
 import { getProjects, saveProjects, getContacts, saveContacts } from '../../admin/adminData'
 import { getPhotoProjects, createPhotoProject, savePhotoProjects, deletePhotoProject, slugify } from '../../admin/photoProjectsData'
+import { getSlideshow, addImageToSlideshow, reorderSlideshow, removeImageFromSlideshow } from '../../admin/slideshowData'
 import { uploadPhoto } from '../../admin/galleryData'
 
 const mono = { fontFamily: 'Space Grotesk, sans-serif' }
@@ -149,14 +150,16 @@ function MoveBtn({ dir, onClick }) {
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
+  const [photoProjects, setPhotoProjects] = useState([])
+  const [slideshow, setSlideshow] = useState([])
   const [contacts, setContacts] = useState({ email: '', instagram: '', instagramUrl: '', phone: '' })
   const [contactsSaved, setContactsSaved] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
-  const [gallery, setGallery] = useState([])
-  const [galleryUploading, setGalleryUploading] = useState(false)
-  const [galleryEditing, setGalleryEditing] = useState(null)
-  const [galleryCaption, setGalleryCaption] = useState('')
-  const [galleryDeleteConfirm, setGalleryDeleteConfirm] = useState(null)
+  const [photoProjDeleteConfirm, setPhotoProjDeleteConfirm] = useState(null)
+  const [newPhotoTitle, setNewPhotoTitle] = useState('')
+  const [creatingPhotoProj, setCreatingPhotoProj] = useState(false)
+  const [slideshowUploading, setSlideshowUploading] = useState(false)
+  const [slideshowDeleteConfirm, setSlideshowDeleteConfirm] = useState(null)
   const [pwdCurrent, setPwdCurrent] = useState('')
   const [pwdNew, setPwdNew] = useState('')
   const [pwdConfirm, setPwdConfirm] = useState('')
@@ -168,14 +171,10 @@ export default function AdminDashboard() {
       return
     }
     getProjects().then(setProjects)
+    getPhotoProjects().then(setPhotoProjects)
+    getSlideshow().then(setSlideshow)
     getContacts().then(setContacts)
-    loadGallery()
   }, [])
-
-  const loadGallery = async () => {
-    const data = await getGallery()
-    setGallery(data.sort((a, b) => (a.order || 0) - (b.order || 0)))
-  }
 
   const handleLogout = () => {
     logout()
@@ -210,58 +209,81 @@ export default function AdminDashboard() {
     setTimeout(() => setContactsSaved(false), 2000)
   }
 
-  const handleGalleryUpload = async (e) => {
+  const movePhotoProject = async (index, dir) => {
+    const updated = [...photoProjects]
+    const swap = dir === 'up' ? index - 1 : index + 1
+    if (swap < 0 || swap >= updated.length) return
+    ;[updated[index], updated[swap]] = [updated[swap], updated[index]]
+    setPhotoProjects(updated)
+    await savePhotoProjects(updated)
+  }
+
+  const deletePhotoProj = async (slug) => {
+    if (photoProjDeleteConfirm !== slug) {
+      setPhotoProjDeleteConfirm(slug)
+      setTimeout(() => setPhotoProjDeleteConfirm(null), 3000)
+      return
+    }
+    await deletePhotoProject(slug)
+    setPhotoProjects(prev => prev.filter(p => p.slug !== slug))
+    setPhotoProjDeleteConfirm(null)
+  }
+
+  const createPhotoProj = async (e) => {
+    e.preventDefault()
+    if (!newPhotoTitle.trim()) return
+    setCreatingPhotoProj(true)
+    try {
+      const slug = slugify(newPhotoTitle)
+      await createPhotoProject({ slug, title: newPhotoTitle })
+      const updated = await getPhotoProjects()
+      setPhotoProjects(updated)
+      setNewPhotoTitle('')
+    } catch (err) {
+      alert('Erro: ' + err.message)
+    } finally {
+      setCreatingPhotoProj(false)
+    }
+  }
+
+  const handleSlideshowUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    setGalleryUploading(true)
+    setSlideshowUploading(true)
     try {
       const uploadResult = await uploadPhoto(file)
-      const photo = await addGalleryPhoto({ path: uploadResult.path, caption: '' })
-      setGallery(prev => [...prev, photo].sort((a, b) => (a.order || 0) - (b.order || 0)))
+      await addImageToSlideshow(uploadResult.path)
+      const updated = await getSlideshow()
+      setSlideshow(updated)
     } catch (err) {
-      console.error('Gallery upload error:', err)
-      alert('Erro ao fazer upload: ' + err.message)
+      alert('Erro no upload: ' + err.message)
     } finally {
-      setGalleryUploading(false)
+      setSlideshowUploading(false)
     }
   }
 
-  const handleGalleryCaption = async (photoId) => {
-    try {
-      await updateGalleryPhoto(photoId, { caption: galleryCaption })
-      setGallery(prev =>
-        prev.map(p => p.id === photoId ? { ...p, caption: galleryCaption } : p)
-      )
-      setGalleryEditing(null)
-      setGalleryCaption('')
-    } catch (err) {
-      console.error('Caption update error:', err)
-    }
-  }
-
-  const handleGalleryDelete = async (photoId) => {
-    if (galleryDeleteConfirm !== photoId) {
-      setGalleryDeleteConfirm(photoId)
-      setTimeout(() => setGalleryDeleteConfirm(null), 3000)
+  const handleSlideshowDelete = async (id) => {
+    if (slideshowDeleteConfirm !== id) {
+      setSlideshowDeleteConfirm(id)
+      setTimeout(() => setSlideshowDeleteConfirm(null), 3000)
       return
     }
     try {
-      await deleteGalleryPhoto(photoId)
-      setGallery(prev => prev.filter(p => p.id !== photoId))
-      setGalleryDeleteConfirm(null)
+      await removeImageFromSlideshow(id)
+      setSlideshow(prev => prev.filter(img => img.id !== id))
+      setSlideshowDeleteConfirm(null)
     } catch (err) {
-      console.error('Photo delete error:', err)
+      alert('Erro: ' + err.message)
     }
   }
 
-  const handleSetCover = async (photoId) => {
-    try {
-      await setCoverPhoto(photoId)
-      setGallery(prev => prev.map(p => ({ ...p, isCover: p.id === photoId })))
-    } catch (err) {
-      console.error('Set cover error:', err)
-    }
+  const moveSlideshowImage = async (index, dir) => {
+    const updated = [...slideshow]
+    const swap = dir === 'up' ? index - 1 : index + 1
+    if (swap < 0 || swap >= updated.length) return
+    ;[updated[index], updated[swap]] = [updated[swap], updated[index]]
+    setSlideshow(updated)
+    await reorderSlideshow(updated)
   }
 
   const handlePasswordChange = (e) => {
@@ -420,34 +442,122 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        {/* Gallery section */}
+        {/* Photo Projects section */}
         <section style={s.section}>
           <div style={s.sectionHeader}>
-            <span style={s.sectionTitle}>GALERIA DE FOTOS — {gallery.length}</span>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <label style={{ ...s.btnPrimary, display: 'inline-block', marginBottom: 0 }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleGalleryUpload}
-                  disabled={galleryUploading}
-                  style={{ display: 'none' }}
-                />
-                {galleryUploading ? '+ CARREGANDO...' : '+ ADICIONAR FOTO'}
-              </label>
-              <button
-                style={s.btnGhost}
-                onClick={() => window.open('/fotos', '_blank')}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}
-              >
-                VER GALERIA
-              </button>
-            </div>
+            <span style={s.sectionTitle}>PROJETOS DE FOTOS — {photoProjects.length}</span>
+            <button
+              style={s.btnPrimary}
+              onClick={() => setCreatingPhotoProj(!creatingPhotoProj)}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              + ADICIONAR
+            </button>
           </div>
 
-          {gallery.length === 0 ? (
-            <p style={{ opacity: 0.3, fontSize: 'clamp(11px, 1.5vw, 12px)', letterSpacing: '0.05em' }}>Nenhuma foto na galeria.</p>
+          {creatingPhotoProj && (
+            <form onSubmit={createPhotoProj} style={{ maxWidth: '480px', marginBottom: '2rem', padding: 'clamp(1rem, 2vw, 1.5rem)', background: 'rgba(238,236,232,0.05)', border: '1px solid rgba(238,236,232,0.1)' }}>
+              <div style={s.formRow}>
+                <label style={s.label}>TÍTULO DO PROJETO</label>
+                <input
+                  autoFocus
+                  style={s.inputField}
+                  type="text"
+                  value={newPhotoTitle}
+                  onChange={e => setNewPhotoTitle(e.target.value)}
+                  placeholder="Ex: Paisagens, Retratos..."
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="submit" style={s.btnPrimary} onMouseEnter={e => e.currentTarget.style.opacity = '0.8'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>CRIAR</button>
+                <button type="button" style={s.btnGhost} onClick={() => setCreatingPhotoProj(false)} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}>CANCELAR</button>
+              </div>
+            </form>
+          )}
+
+          {photoProjects.length === 0 ? (
+            <p style={{ opacity: 0.3, fontSize: 'clamp(11px, 1.5vw, 12px)', letterSpacing: '0.05em' }}>Nenhum projeto de fotos.</p>
+          ) : (
+            <div style={{ overflowX: 'auto', marginTop: '1.5rem' }}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>ORDEM</th>
+                    <th style={s.th}>THUMB</th>
+                    <th style={s.th}>TÍTULO</th>
+                    <th style={s.th}>SLUG</th>
+                    <th style={s.th}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {photoProjects.map((p, i) => (
+                    <tr key={p.slug}>
+                      <td style={{ ...s.td, width: 'clamp(50px, 10vw, 80px)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <MoveBtn dir="up" onClick={() => movePhotoProject(i, 'up')} />
+                          <MoveBtn dir="down" onClick={() => movePhotoProject(i, 'down')} />
+                        </div>
+                      </td>
+                      <td style={{ ...s.td, width: 'clamp(50px, 10vw, 80px)' }}>
+                        {p.thumbnail ? <img src={p.thumbnail} alt="" style={s.thumb} /> : <div style={{ ...s.thumb, opacity: 0.15 }} />}
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ fontWeight: '500' }}>{p.title}</span>
+                      </td>
+                      <td style={s.td}>
+                        <span style={{ opacity: 0.4, fontSize: 'clamp(10px, 1.2vw, 11px)' }}>{p.slug}</span>
+                      </td>
+                      <td style={{ ...s.td, width: 'clamp(140px, 25vw, 200px)' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            style={s.btnGhost}
+                            onClick={() => navigate(`/admin/photo-projects/${p.slug}`)}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)'}
+                          >
+                            EDITAR
+                          </button>
+                          <button
+                            style={{
+                              ...s.btnDanger,
+                              ...(photoProjDeleteConfirm === p.slug ? { background: 'rgba(255,80,80,0.15)', borderColor: 'rgba(255,80,80,0.6)', color: '#ff6b6b' } : {}),
+                            }}
+                            onClick={() => deletePhotoProj(p.slug)}
+                            onMouseEnter={e => { if (photoProjDeleteConfirm !== p.slug) { e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'; e.currentTarget.style.color = 'rgba(255,100,100,1)' } }}
+                            onMouseLeave={e => { if (photoProjDeleteConfirm !== p.slug) { e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'; e.currentTarget.style.color = 'rgba(255,100,100,0.7)' } }}
+                          >
+                            {photoProjDeleteConfirm === p.slug ? 'CONFIRMAR?' : 'APAGAR'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Slideshow section */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionTitle}>IMAGENS DE FUNDO (SLIDESHOW) — {slideshow.length}</span>
+            <label style={{ ...s.btnPrimary, display: 'inline-block', marginBottom: 0, cursor: 'crosshair' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleSlideshowUpload}
+                disabled={slideshowUploading}
+                style={{ display: 'none' }}
+              />
+              {slideshowUploading ? '+ CARREGANDO...' : '+ ADICIONAR IMAGEM'}
+            </label>
+          </div>
+
+          {slideshow.length === 0 ? (
+            <p style={{ opacity: 0.3, fontSize: 'clamp(11px, 1.5vw, 12px)', letterSpacing: '0.05em' }}>Nenhuma imagem no slideshow.</p>
           ) : (
             <div style={{
               display: 'grid',
@@ -455,16 +565,14 @@ export default function AdminDashboard() {
               gap: 'clamp(1rem, 3vw, 1.5rem)',
               marginTop: '1.5rem'
             }}>
-              {gallery.map((photo) => (
+              {slideshow.map((img, idx) => (
                 <div
-                  key={photo.id}
+                  key={img.id}
                   style={{
                     backgroundColor: 'rgba(238,236,232,0.05)',
                     border: '1px solid rgba(238,236,232,0.1)',
-                    borderRadius: '2px',
                     overflow: 'hidden',
                     transition: 'all 0.3s ease',
-                    cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = 'rgba(238,236,232,0.1)'
@@ -477,131 +585,89 @@ export default function AdminDashboard() {
                     e.currentTarget.style.transform = 'scale(1)'
                   }}
                 >
-                  <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: '1' }}>
+                  <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9' }}>
                     <img
-                      src={photo.path}
+                      src={img.path}
                       alt=""
                       style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        transition: 'filter 0.3s ease'
+                        display: 'block',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.85)'}
-                      onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}
                     />
                   </div>
                   <div style={{ padding: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                    {photo.isCover && (
-                      <p style={{ fontSize: '8px', letterSpacing: '0.15em', opacity: 0.4, marginBottom: '0.35rem', fontWeight: '700' }}>
-                        ★ NOME VISÍVEL NA PÁGINA FOTOS
-                      </p>
-                    )}
-                    {galleryEditing === photo.id ? (
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <input
-                          autoFocus
-                          type="text"
-                          value={galleryCaption}
-                          onChange={e => setGalleryCaption(e.target.value)}
-                          placeholder="Nome / caption..."
-                          style={{
-                            ...s.inputField,
-                            fontSize: 'clamp(10px, 1.2vw, 11px)',
-                            padding: '0.25rem 0',
-                            marginBottom: 0,
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleGalleryCaption(photo.id)
-                            if (e.key === 'Escape') setGalleryEditing(null)
-                          }}
-                        />
-                        <button
-                          onClick={() => handleGalleryCaption(photo.id)}
-                          style={{
-                            fontSize: 'clamp(9px, 1.2vw, 10px)',
-                            padding: '0.25rem 0.5rem',
-                            background: 'rgba(238,236,232,0.2)',
-                            border: 'none',
-                            color: '#eeece8',
-                            cursor: 'pointer',
-                            fontFamily: 'Space Grotesk, sans-serif',
-                            fontWeight: '600',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(238,236,232,0.4)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(238,236,232,0.2)'}
-                        >
-                          ✓
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => {
-                          setGalleryEditing(photo.id)
-                          setGalleryCaption(photo.caption || '')
-                        }}
-                        style={{
-                          cursor: 'pointer',
-                          opacity: 0.6,
-                          minHeight: '1.2em',
-                          fontSize: 'clamp(10px, 1.2vw, 11px)',
-                          transition: 'opacity 0.2s',
-                          wordBreak: 'break-word'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
-                      >
-                        {photo.caption || '(sem nome)'}
-                      </div>
-                    )}
+                    <p style={{ fontSize: '8px', letterSpacing: '0.15em', opacity: 0.4, margin: 0, marginBottom: '0.5rem', fontWeight: '700' }}>
+                      {String(idx + 1).padStart(2, '0')} / {String(slideshow.length).padStart(2, '0')}
+                    </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem', paddingTop: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
+                      <button
+                        onClick={() => moveSlideshowImage(idx, 'up')}
+                        disabled={idx === 0}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#eeece8',
+                          opacity: idx === 0 ? 0.15 : 0.4,
+                          cursor: idx === 0 ? 'default' : 'crosshair',
+                          fontSize: '10px',
+                          padding: '2px 4px',
+                          fontFamily: 'monospace',
+                          lineHeight: 1,
+                          transition: 'opacity 0.2s',
+                        }}
+                        onMouseEnter={e => { if (idx !== 0) e.currentTarget.style.opacity = '1' }}
+                        onMouseLeave={e => { if (idx !== 0) e.currentTarget.style.opacity = '0.4' }}
+                      >▲</button>
+                      <button
+                        onClick={() => moveSlideshowImage(idx, 'down')}
+                        disabled={idx === slideshow.length - 1}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#eeece8',
+                          opacity: idx === slideshow.length - 1 ? 0.15 : 0.4,
+                          cursor: idx === slideshow.length - 1 ? 'default' : 'crosshair',
+                          fontSize: '10px',
+                          padding: '2px 4px',
+                          fontFamily: 'monospace',
+                          lineHeight: 1,
+                          transition: 'opacity 0.2s',
+                        }}
+                        onMouseEnter={e => { if (idx !== slideshow.length - 1) e.currentTarget.style.opacity = '1' }}
+                        onMouseLeave={e => { if (idx !== slideshow.length - 1) e.currentTarget.style.opacity = '0.4' }}
+                      >▼</button>
+                    </div>
                     <button
-                      onClick={() => handleSetCover(photo.id)}
-                      title={photo.isCover ? 'Foto de capa atual' : 'Definir como capa'}
-                      style={{
-                        ...s.btnGhost,
-                        flex: 1,
-                        padding: 'clamp(0.3rem, 1vw, 0.35rem)',
-                        fontSize: 'clamp(8px, 1.2vw, 9px)',
-                        ...(photo.isCover ? {
-                          background: 'rgba(238,236,232,0.15)',
-                          borderColor: 'rgba(238,236,232,0.6)',
-                        } : {}),
-                      }}
-                      onMouseEnter={e => { if (!photo.isCover) e.currentTarget.style.borderColor = 'rgba(238,236,232,0.5)' }}
-                      onMouseLeave={e => { if (!photo.isCover) e.currentTarget.style.borderColor = 'rgba(238,236,232,0.2)' }}
-                    >
-                      {photo.isCover ? '★ CAPA' : '☆ CAPA'}
-                    </button>
-                    <button
-                      onClick={() => handleGalleryDelete(photo.id)}
+                      onClick={() => handleSlideshowDelete(img.id)}
                       style={{
                         ...s.btnDanger,
                         flex: 1,
                         padding: 'clamp(0.3rem, 1vw, 0.35rem)',
                         fontSize: 'clamp(8px, 1.2vw, 9px)',
-                        ...(galleryDeleteConfirm === photo.id ? {
+                        ...(slideshowDeleteConfirm === img.id ? {
                           background: 'rgba(255,80,80,0.15)',
                           borderColor: 'rgba(255,80,80,0.6)',
                           color: '#ff6b6b',
                         } : {}),
                       }}
                       onMouseEnter={e => {
-                        if (galleryDeleteConfirm !== photo.id) {
+                        if (slideshowDeleteConfirm !== img.id) {
                           e.currentTarget.style.borderColor = 'rgba(255,80,80,0.5)'
                           e.currentTarget.style.color = 'rgba(255,100,100,1)'
                         }
                       }}
                       onMouseLeave={e => {
-                        if (galleryDeleteConfirm !== photo.id) {
+                        if (slideshowDeleteConfirm !== img.id) {
                           e.currentTarget.style.borderColor = 'rgba(255,80,80,0.25)'
                           e.currentTarget.style.color = 'rgba(255,100,100,0.7)'
                         }
                       }}
                     >
-                      {galleryDeleteConfirm === photo.id ? 'CONFIRMAR?' : 'APAGAR'}
+                      {slideshowDeleteConfirm === img.id ? 'CONFIRMAR?' : 'APAGAR'}
                     </button>
                   </div>
                 </div>

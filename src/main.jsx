@@ -11,10 +11,12 @@ import ProjectPage from './pages/ProjectPage'
 import ContactsPage from './pages/ContactsPage'
 import VideoPage from './pages/VideoPage'
 import PhotosPage from './pages/PhotosPage'
+import PhotoProjectPage from './pages/PhotoProjectPage'
 import GalleryPage from './pages/GalleryPage'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProjectEditor from './pages/admin/AdminProjectEditor'
+import AdminPhotoProjectEditor from './pages/admin/AdminPhotoProjectEditor'
 import { LanguageProvider } from './i18n/LanguageContext'
 import './styles/global.css'
 
@@ -29,9 +31,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/video" element={<VideoPage />} />
           <Route path="/fotos" element={<PhotosPage />} />
           <Route path="/fotos/galeria" element={<GalleryPage />} />
+          <Route path="/fotos/:slug" element={<PhotoProjectPage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/projects/:slug" element={<AdminProjectEditor />} />
+          <Route path="/admin/photo-projects/:slug" element={<AdminPhotoProjectEditor />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>

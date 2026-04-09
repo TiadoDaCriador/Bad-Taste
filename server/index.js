@@ -7,6 +7,7 @@ import galleryRoutes from './routes/gallery.js'
 import projectsRoutes from './routes/projects.js'
 import contactsRoutes from './routes/contacts.js'
 import photoProjectsRoutes from './routes/photoProjects.js'
+import slideshowRoutes from './routes/slideshow.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -31,6 +32,7 @@ app.use('/api/gallery', galleryRoutes)
 app.use('/api/projects', projectsRoutes)
 app.use('/api/contacts', contactsRoutes)
 app.use('/api/photo-projects', photoProjectsRoutes)
+app.use('/api/slideshow', slideshowRoutes)
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
