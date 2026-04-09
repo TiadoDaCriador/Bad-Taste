@@ -1,33 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { getProjects } from '../admin/adminData'
-import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
+import { useLanguage } from '../i18n/LanguageContext'
 import ContactsFooter from '../components/ContactsFooter'
-
-function LanguageSwitcher() {
-  const { lang, changeLanguage } = useLanguage()
-  return (
-    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center' }}>
-      {LANGUAGES.map((l, i) => (
-        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
-          <button
-            onClick={() => changeLanguage(l)}
-            style={{
-              fontSize: 'clamp(9px, 1.2vw, 10px)', fontWeight: '600', letterSpacing: '0.15em',
-              color: '#eeece8', background: 'none', border: 'none', cursor: 'crosshair', padding: 0,
-              opacity: lang === l ? 1 : 0.35, transition: 'opacity 0.2s', fontFamily: 'inherit',
-            }}
-            onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
-            onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
-          >{l.toUpperCase()}</button>
-          {i < LANGUAGES.length - 1 && (
-            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#eeece8', opacity: 0.2 }}>|</span>
-          )}
-        </span>
-      ))}
-    </div>
-  )
-}
+import Navbar from '../components/Navbar'
 
 function VideoCard({ project, index, total, t, isLast, isOdd }) {
   const navigate = useNavigate()
@@ -180,6 +156,10 @@ export default function VideoPage() {
   }, [])
 
   const isOdd = projects.length % 2 !== 0
+  const handleBack = () => {
+    setVisible(false)
+    setTimeout(() => navigate('/'), 250)
+  }
 
   return (
     <div style={{
@@ -197,75 +177,7 @@ export default function VideoPage() {
         }
       `}</style>
 
-      <nav style={{
-        position: 'sticky', top: 0,
-        height: 'clamp(50px, 10vw, 60px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 clamp(1rem, 3vw, 1.75rem)',
-        zIndex: 100, background: '#111',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        gap: 'clamp(1rem, 2vw, 1.5rem)', flexWrap: 'wrap', flexShrink: 0,
-      }}>
-        <button
-          onClick={() => { setVisible(false); setTimeout(() => navigate('/'), 250); }}
-          style={{
-            background: 'none', border: 'none', cursor: 'crosshair',
-            fontSize: 'clamp(10px, 1.2vw, 11px)', fontFamily: 'inherit',
-            letterSpacing: '0.12em', color: '#eeece8', padding: 0,
-            opacity: 0.5, transition: 'opacity 0.2s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
-        >
-          ← {t.project?.back?.replace('← ', '') || 'VOLVER'}
-        </button>
-
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', textDecoration: 'none', cursor: 'crosshair' }}>
-          <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none">
-            <rect width="36" height="36" fill="#eeece8"/>
-            <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#111">BT</text>
-          </svg>
-          <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', fontWeight: '700', letterSpacing: '0.12em', color: '#eeece8' }}>
-            BAD TASTE
-          </span>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 2.5rem)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <span style={{
-            fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '700',
-            letterSpacing: '0.15em', color: '#eeece8',
-            borderBottom: '1px solid #eeece8', paddingBottom: '1px',
-          }}>
-            VIDEO
-          </span>
-          <Link
-            to="/fotos"
-            style={{
-              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
-              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
-              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
-          >
-            {t.nav?.photos || 'FOTOS'}
-          </Link>
-          <Link
-            to="/contactos"
-            style={{
-              fontSize: 'clamp(10px, 1.2vw, 11px)', fontWeight: '600',
-              letterSpacing: '0.15em', color: '#eeece8', opacity: 0.45,
-              textDecoration: 'none', cursor: 'crosshair', transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
-          >
-            {t.nav?.contacts || 'CONTACTO'}
-          </Link>
-          <div style={{ width: '1px', height: 'clamp(10px, 1.5vw, 12px)', background: '#eeece8', opacity: 0.15 }} />
-          <LanguageSwitcher />
-        </div>
-      </nav>
+      <Navbar theme="dark" variant="sticky" activeItem="video" showBack onBack={handleBack} />
 
       <div data-video-grid style={{
         display: 'grid',

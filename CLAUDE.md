@@ -65,6 +65,8 @@ src/
     translations.js         — traduções: UI + títulos/descrições/tags (ES/CA/EN) + fotos
     LanguageContext.jsx     — LanguageProvider + hook useLanguage()
   components/
+    Navbar.jsx              — navbar partilhado com theme (light/dark), variant (fixed/sticky), hamburger menu em mobile, active item highlighting
+    LanguageSwitcher.jsx    — seletor de língua (ES/CA/EN) com color prop
     RotatingWheel.jsx       — anel SVG rotativo + hover/velocidade
     VideoPreview.jsx        — caixa de info (título, descrição, tags, contador)
     BackgroundSlideshow.jsx — slideshow de fundo com crossfade
@@ -182,15 +184,40 @@ Cada projeto tem:
   - Exemplo: `font-size: clamp(12px, 1.5vw, 13px)` — escala entre 12px-13px baseado em viewport
   - Exemplo: `padding: clamp(1rem, 3vw, 2rem)` — escala entre 1rem-2rem baseado em viewport
 - **Sem breakpoints abruptos**: layout flui naturalmente entre mobile/tablet/desktop
+- **Navbar responsiva** (`Navbar.jsx`):
+  - Desktop (>768px): logo + "BAD TASTE" à esquerda; links (VIDEO/FOTOS/CONTACTO) + language switcher à direita
+  - Mobile (≤768px): logo à esquerda; ícone hamburguer (☰/✕) à direita — ao clicar abre overlay fullscreen com links centrados e language switcher no bottom
+  - Overlay mobile: fundo `#1a1a1a`, links em `#eeece8`, gap generoso entre itens (3-4.5rem), close button no topo direito
 - **Aplicado a todas as páginas**:
   - HomePage: navbar (logo, gaps, altura), footer grid (`auto-fit`)
-  - VideoPage: navbar, grid 2 col (desktop) → 1 col (mobile via media query), cards responsivos
-  - PhotosPage: card de capa responsivo, navbar responsiva
-  - GalleryPage: grid auto-fill → 2 col (tablet) → 1 col (mobile), lightbox responsivo
+  - VideoPage: navbar partilhada + hamburger, grid 2 col (desktop) → 1 col (mobile via media query), cards responsivos
+  - PhotosPage: navbar partilhada + hamburger, card de capa responsivo
+  - GalleryPage: navbar partilhada + hamburger, grid 2 col → 1 col mobile, lightbox responsivo
   - ProjectPage: back button, vídeo, conteúdo, títulos
   - ContactsPage: header flexível, layout 2 col → 1 col em mobile (media query), formulário
   - AdminDashboard: tabela com scrolling, inputs, buttons, espaçamento
 - **Benefício**: tipografia e espaçamento sempre legível/proporcional, sem saltos de tamanho
+
+## Navbar Partilhada (`src/components/Navbar.jsx`)
+- Props:
+  - `theme` — 'light' (fundo transparente, texto `#111`) ou 'dark' (fundo `#111`, texto `#eeece8`)
+  - `variant` — 'fixed' (position: fixed) ou 'sticky' (position: sticky)
+  - `activeItem` — 'video'|'photos'|'contacts'|null — destaca o link correspondente com border-bottom
+  - `showBack` — boolean; se true, mostra botão "← VOLVER" no canto esquerdo
+  - `onBack` — callback executado ao clicar no back button (fallback: navigate(-1))
+- Desktop (>768px): layout flexbox com logo à esquerda, links à direita, language switcher integrado
+- Mobile (≤768px): logo à esquerda, hamburguer à direita; overlay menu centrado ao clicar
+- Transição suave do menu: overlay com `position: fixed` inset 0, flexbox centrado, padding generoso
+- Close button no overlay: `✕` com opacity 0.7 em hover → 1
+- Active link styling: border-bottom + opacidade 1; inactive links com opacidade reduzida (0.45 em dark, 0.75 em light)
+- Cursor: `crosshair` em todos os botões/links (estética do projeto)
+
+## Language Switcher (`src/components/LanguageSwitcher.jsx`)
+- Componente extraído, eliminando duplicação em HomePage, VideoPage, PhotosPage, PhotoProjectPage
+- Props: `color` — cor do texto (padrão: `#eeece8`)
+- Buttons ES|CA|EN com hover effect (opacity 0.6 → 1)
+- Alterna idioma via `useLanguage()` hook e guarda em `localStorage`
+- Integrado no Navbar (desktop) e no overlay menu (mobile)
 
 ## BackgroundSlideshow (`src/components/BackgroundSlideshow.jsx`)
 - Dois slots alternados (A/B) com `backgroundImage` CSS — crossfade suave sem flash
@@ -297,6 +324,11 @@ Cada projeto tem:
   - [x] ProjectPage: back button, vídeo, conteúdo responsivos
   - [x] ContactsPage: header, layout 2 col → 1 col mobile, formulário responsivo
   - [x] AdminDashboard: tabela, inputs, buttons, espaçamento responsivos
+- [x] **Navbar refatorizada** — componente partilhado `Navbar.jsx` utilizado em todas as páginas (HomePage, VideoPage, PhotosPage, GalleryPage, PhotoProjectPage) com props `theme`, `variant`, `activeItem`, `showBack`, `onBack`
+- [x] **Hamburguer menu em mobile** (≤768px) — ícone ☰/✕, overlay fullscreen centrado com links de navegação, language switcher no bottom, close button no topo direito
+- [x] **LanguageSwitcher extraído** para componente separado (`LanguageSwitcher.jsx`) — elimina duplicação em 4 ficheiros, prop `color` para ajustar cor do texto
+- [x] **ContactsFooter redesenhado** — 3 colunas (branding + navegar + contacto) em desktop, stack em mobile; real `<Link>` components para `/video`, `/fotos`, `/contactos`; email, Instagram, telemóvel com links funcionais; bottom bar com copyright
+- [x] **Fix do item ativo na navbar** — "FOTOS" permanece ativo quando navegado para `/fotos` e `/fotos/galeria` (anteriormente mostrava "GALERIA")
 - [ ] Formulário de contacto ligado a serviço de envio real (Formspree / Resend / etc.) — atualmente só UI
 - [ ] `previewStart` afinado para cada vídeo (cortar no momento certo) — todos a `0` por agora
 - [ ] Vídeos reais para SSonoro 2026 e Epsilon (substituir o vídeo de teste)

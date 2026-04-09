@@ -1,131 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import RotatingWheel from '../components/RotatingWheel'
 import BackgroundSlideshow from '../components/BackgroundSlideshow'
 import VideoPreview from '../components/VideoPreview'
+import Navbar from '../components/Navbar'
 import { getProjects } from '../admin/adminData'
-import { useLanguage, LANGUAGES } from '../i18n/LanguageContext'
-
-function LanguageSwitcher() {
-  const { lang, changeLanguage } = useLanguage()
-
-  return (
-    <div style={{ display: 'flex', gap: 'clamp(0.4rem, 1vw, 0.6rem)', alignItems: 'center', flexWrap: 'wrap' }}>
-      {LANGUAGES.map((l, i) => (
-        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1vw, 0.6rem)' }}>
-          <button
-            onClick={() => changeLanguage(l)}
-            style={{
-              fontSize: 'clamp(9px, 1.2vw, 10px)',
-              fontWeight: '600',
-              letterSpacing: '0.15em',
-              color: '#111',
-              background: 'none',
-              border: 'none',
-              cursor: 'crosshair',
-              padding: 0,
-              opacity: lang === l ? 1 : 0.35,
-              transition: 'opacity 0.2s',
-              fontFamily: 'inherit',
-            }}
-            onMouseEnter={e => { if (lang !== l) e.currentTarget.style.opacity = '0.65' }}
-            onMouseLeave={e => { if (lang !== l) e.currentTarget.style.opacity = '0.35' }}
-          >
-            {l.toUpperCase()}
-          </button>
-          {i < LANGUAGES.length - 1 && (
-            <span style={{ fontSize: 'clamp(9px, 1.2vw, 10px)', color: '#111', opacity: 0.2 }}>|</span>
-          )}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function Navbar() {
-  const { t } = useLanguage()
-
-  const navLinks = [
-    { label: t.nav.video, to: '/video' },
-    { label: t.nav.photos, to: '/fotos' },
-    { label: t.nav.contacts, to: '/contactos' },
-  ]
-
-  return (
-    <nav style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 'clamp(50px, 10vw, 60px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 clamp(1rem, 3vw, 1.75rem)',
-      zIndex: 100,
-      pointerEvents: 'none',
-      gap: 'clamp(1rem, 2vw, 1.5rem)',
-      flexWrap: 'wrap',
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'clamp(6px, 1.5vw, 10px)',
-        pointerEvents: 'auto',
-      }}>
-        <svg width="clamp(28px, 5vw, 36px)" height="clamp(28px, 5vw, 36px)" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bad Taste">
-          <rect width="36" height="36" fill="#111"/>
-          <text x="5" y="25" fontFamily="Space Grotesk, sans-serif" fontSize="16" fontWeight="700" letterSpacing="1" fill="#eeece8">BT</text>
-        </svg>
-        <span style={{
-          fontSize: 'clamp(12px, 2vw, 15px)',
-          fontWeight: '700',
-          letterSpacing: '0.12em',
-          color: '#111',
-        }}>BAD TASTE</span>
-      </div>
-
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'clamp(1.2rem, 2vw, 2.5rem)',
-        pointerEvents: 'auto',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-end',
-      }}>
-        {navLinks.map(({ label, to }) => (
-          <Link
-            key={label}
-            to={to}
-            style={{
-              fontSize: 'clamp(10px, 1.2vw, 11px)',
-              fontWeight: '600',
-              letterSpacing: '0.15em',
-              color: '#111',
-              cursor: 'crosshair',
-              opacity: 0.75,
-              transition: 'opacity 0.2s',
-              textDecoration: 'none',
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
-          >
-            {label}
-          </Link>
-        ))}
-
-        <div style={{
-          width: '1px',
-          height: 'clamp(10px, 1.5vw, 12px)',
-          background: '#111',
-          opacity: 0.2,
-        }} />
-
-        <LanguageSwitcher />
-      </div>
-    </nav>
-  )
-}
+import { useLanguage } from '../i18n/LanguageContext'
 
 function ContactsSection() {
   const { t } = useLanguage()
@@ -230,7 +109,7 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar />
+      <Navbar theme="light" variant="fixed" />
 
       <main style={{
         height: '100vh',
